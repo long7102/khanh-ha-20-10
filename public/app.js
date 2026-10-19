@@ -1,5 +1,5 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const photoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=7`;
+const photoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=8`;
 const photoAlt = number => `Ảnh Khánh Hạ trong bộ sưu tập, số ${number}`;
 function attachPhoto(container, number, eager = false) {
   const image = document.createElement('img');
@@ -43,11 +43,6 @@ if ('IntersectionObserver' in window && !reducedMotion.matches) {
   }, { threshold: 0.08, rootMargin: '0px 0px -3% 0px' });
   revealItems.forEach(item => revealObserver.observe(item));
 } else revealItems.forEach(item => item.classList.add('visible'));
-
-document.querySelector('#logout').addEventListener('click', () => {
-  sessionStorage.removeItem('ha-access');
-  window.location.replace('./index.html');
-});
 
 const startDate = Date.UTC(2026, 2, 7, 0, 0, 0);
 function updateCounter() {
@@ -110,29 +105,6 @@ if (!reducedMotion.matches) {
     card.addEventListener('pointerleave', () => { card.style.transform = ''; });
   });
 }
-
-const AUDIO_SRC = ''; // Add a local file, e.g. '/media/our-song.mp3'.
-const audio = AUDIO_SRC ? new Audio(AUDIO_SRC) : null;
-if (audio) audio.loop = true;
-function updateMusicLabel(playing) {
-  document.querySelector('#music-label').textContent = playing ? 'Tạm dừng nhạc' : 'Nhạc của mình';
-  document.querySelector('#music-card-label').textContent = audio ? (playing ? 'Tạm dừng nhạc' : 'Bật nhạc') : 'Nhạc đang chờ thêm';
-  document.querySelector('#music-toggle').setAttribute('aria-pressed', String(playing));
-  document.querySelector('#record').classList.toggle('playing', playing && !reducedMotion.matches);
-}
-async function toggleMusic() {
-  if (!audio) {
-    document.querySelector('#music-card-label').textContent = 'Thêm file nhạc để phát ♫';
-    document.querySelector('#music-card-toggle').focus();
-    return;
-  }
-  if (audio.paused) {
-    try { await audio.play(); } catch { document.querySelector('#music-card-label').textContent = 'Không mở được nhạc'; }
-  } else audio.pause();
-  updateMusicLabel(!audio.paused);
-}
-document.querySelector('#music-toggle').addEventListener('click', toggleMusic);
-document.querySelector('#music-card-toggle').addEventListener('click', toggleMusic);
 
 const loveChoice = document.querySelector('#love-choice');
 const hateChoice = document.querySelector('#hate-choice');

@@ -10,6 +10,10 @@ for (let i = 0; i < 30; i++) {
   ocean.append(symbol);
 }
 document.body.append(ocean);
+const sea = document.createElement('div');
+sea.className = 'ocean-scenery'; sea.setAttribute('aria-hidden', 'true');
+sea.innerHTML = '<div class="ocean-rays"></div><div class="ocean-waves"><span></span><span></span><span></span></div><svg class="ocean-life" viewBox="0 0 1200 280" preserveAspectRatio="xMidYMax slice"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M30 280Q10 220 48 180Q75 140 50 90M50 225Q83 202 88 165M45 190Q20 170 14 140M1130 280Q1090 225 1124 170Q1150 120 1132 65M1122 220Q1165 190 1175 146M1125 175Q1090 145 1095 115"/><path d="M220 100q30-30 60 0q-30 30-60 0l-17-14v28zM945 160q-26-24-52 0q26 24 52 0l15-12v24z"/></g><g fill="currentColor" opacity=".3"><circle cx="85" cy="100" r="4"/><circle cx="105" cy="70" r="7"/><circle cx="1090" cy="60" r="5"/><circle cx="1070" cy="95" r="3"/></g></svg>';
+document.body.append(sea);
 const satellites = document.createElement('div');
 satellites.className = 'satellite-field';
 satellites.setAttribute('aria-hidden', 'true');
@@ -48,6 +52,16 @@ let turning = false;
 let bookOnScreen = false;
 let bookPaused = !motionOkay();
 let photoOpen = false;
+const decodedPages = new Map();
+function warmPhoto(number) {
+  if (number > 27) return Promise.resolve();
+  if (!decodedPages.has(number)) {
+    const image = new Image(); image.src = photoPath(number);
+    decodedPages.set(number, image.decode().catch(() => {}));
+  }
+  return decodedPages.get(number);
+}
+const warmSpread = start => Promise.all([warmPhoto(start), warmPhoto(start + 1)]);
 function fillPage(page, number) {
   page.replaceChildren();
   if (number > 27) {
@@ -76,11 +90,13 @@ function paintBook() {
   fillPage(rightPage, spreadStart + 1);
   bookSection.querySelector('.book-status').textContent = `TRANG ${String(spreadStart).padStart(2, '0')} — ${Math.min(27, spreadStart + 1)} / 27`;
 }
-function turnBook(direction = 1) {
+async function turnBook(direction = 1) {
   if (turning || photoOpen) return;
   const next = direction > 0 ? (spreadStart >= 27 ? 1 : spreadStart + 2) : (spreadStart <= 1 ? 27 : spreadStart - 2);
   if (!motionOkay()) { spreadStart = next; paintBook(); return; }
   turning = true;
+  await warmSpread(next);
+  if (photoOpen) { turning = false; return; }
   const leaf = document.createElement('div');
   leaf.className = `turning-leaf${direction < 0 ? ' backwards' : ''}`;
   const front = document.createElement('div');
@@ -95,9 +111,11 @@ function turnBook(direction = 1) {
   book.append(leaf);
   leaf.addEventListener('animationend', () => {
     spreadStart = next;
-    paintBook();
-    leaf.remove();
-    turning = false;
+    if (direction > 0) fillPage(leftPage, spreadStart);
+    else fillPage(rightPage, spreadStart + 1);
+    bookSection.querySelector('.book-status').textContent = `TRANG ${String(spreadStart).padStart(2, '0')} — ${Math.min(27, spreadStart + 1)} / 27`;
+    requestAnimationFrame(() => { leaf.remove(); turning = false; });
+    warmSpread(spreadStart >= 27 ? 1 : spreadStart + 2);
   }, { once: true });
 }
 function syncBookPause() {
@@ -117,6 +135,7 @@ setInterval(() => {
 }, 5200);
 reducedMotion.addEventListener('change', () => { if (!motionOkay()) { bookPaused = true; syncBookPause(); } });
 paintBook(); syncBookPause();
+warmSpread(3);
 
 // Lift the selected picture from its page into a full-screen viewer and return it.
 const viewer = document.querySelector('#photo-dialog');
@@ -136,11 +155,13 @@ async function openPortrait(button) {
   const number = Number(button.dataset.photo);
   sourcePhoto = button.querySelector('img');
   if (!sourcePhoto) return;
+  photoOpen = true;
   sourceButton = button;
   const from = sourcePhoto.getBoundingClientRect();
   const memory = window.HA_MEMORIES[number - 1];
   viewerImage.src = photoPath(number);
   viewerImage.alt = photoAlt(number);
+  await viewerImage.decode().catch(() => {});
   viewer.querySelector('h2').textContent = memory.title;
   const paragraph = viewer.querySelector('.viewer-copy p');
   paragraph.textContent = memory.paragraph;
@@ -150,13 +171,22 @@ async function openPortrait(button) {
   document.body.style.overflow = 'hidden';
   viewer.showModal();
   sourcePhoto.style.visibility = 'hidden';
+  sourceButton.classList.add('page-torn');
+  viewerImage.classList.add('torn-portrait');
   if (motionOkay()) {
     const to = viewerImage.getBoundingClientRect();
     liftAnimation = viewerImage.animate([
-      { transform: photoTransform(from, to) + ' rotate(-4deg)', opacity: .8 },
-      { transform: 'translate(0,-18px) scale(1.04) rotate(1deg)', opacity: 1, offset: .78 },
+      { transform: photoTransform(from, to), opacity: 1, clipPath: 'inset(0)' },
+      { transform: photoTransform({ ...from.toJSON(), top: from.top - 65, left: from.left + 22 }, to) + ' rotate(-12deg)', opacity: 1, offset: .3, clipPath: 'polygon(2% 0,100% 0,100% 100%,2% 100%,0 92%,2% 84%,0 76%,2% 68%,0 60%,2% 52%,0 44%,2% 36%,0 28%,2% 20%,0 12%)' },
+      { transform: 'translate(0,-18px) scale(1.03) rotate(1deg)', opacity: 1, offset: .8 },
       { transform: 'none', opacity: 1 }
-    ], { duration: 680, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    ], { duration: 1050, easing: 'cubic-bezier(.22,.65,.2,1)' });
+    for (let i = 0; i < 7; i++) {
+      const scrap = document.createElement('span'); scrap.className = 'paper-fleck';
+      scrap.style.left = `${from.left}px`; scrap.style.top = `${from.top + from.height * i / 7}px`;
+      viewer.append(scrap);
+      scrap.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${-30 - i * 8}px,${35 + i * 12}px) rotate(${i * 37}deg)`, opacity: 0 }], { duration: 850, delay: i * 35, fill: 'forwards' }).finished.then(() => scrap.remove());
+    }
   }
 }
 async function closePortrait() {
@@ -170,6 +200,7 @@ async function closePortrait() {
   }
   viewer.close();
   if (sourcePhoto) sourcePhoto.style.visibility = '';
+  sourceButton?.classList.remove('page-torn');
   viewerImage.getAnimations().forEach(animation => animation.cancel());
   document.body.style.overflow = previousOverflow;
   sourceButton?.focus({ preventScroll: true });
@@ -242,57 +273,4 @@ const letterObserver = new IntersectionObserver(entries => {
 }, { threshold: .16 });
 letterObserver.observe(mainLetter);
 
-// A champagne fountain: staggered launches, upward arcs, spin, then gravity.
-const fountainButton = document.querySelector('#gift-button');
-const fountainLayer = document.querySelector('#gift-burst');
-const fountainLetter = document.querySelector('#gift-message');
-document.body.append(fountainLayer);
-const giftWriter = prepareLetter(fountainLetter);
-let fountainBusy = false;
-fountainButton.addEventListener('click', async () => {
-  if (fountainBusy) return;
-  fountainBusy = true; fountainButton.disabled = true;
-  giftWriter.finish(); fountainLetter.hidden = true;
-  fountainButton.classList.remove('open'); fountainButton.setAttribute('aria-expanded', 'false');
-  fountainButton.querySelector('.gift-tap').textContent = 'ĐANG CHUẨN BỊ BẤT NGỜ…';
-  if (motionOkay()) {
-    const photos = Array.from({ length: 27 }, (_, index) => {
-      const image = new Image(); image.src = photoPath(index + 1); image.alt = ''; image.className = 'champagne-photo'; return image;
-    });
-    await Promise.all(photos.map(image => image.decode().catch(() => {})));
-    const rect = fountainButton.getBoundingClientRect();
-    const originX = rect.left + rect.width / 2;
-    const originY = rect.top + rect.height * .35;
-    fountainButton.classList.add('open');
-    const flights = photos.map((image, index) => {
-      image.style.left = `${originX}px`; image.style.top = `${originY}px`;
-      fountainLayer.append(image);
-      const dx = Math.sin(index * 2.399) * Math.min(innerWidth * .43, 540);
-      const peak = Math.min(innerHeight * .6, 460) + index % 4 * 24;
-      const rotation = (index % 2 ? 1 : -1) * (100 + index % 5 * 45);
-      const transform = (x, y, size, angle) => `translate(calc(-50% + ${x}px),calc(-50% + ${y}px)) scale(${size}) rotate(${angle}deg)`;
-      return image.animate([
-        { transform: transform(0, 0, .1, 0), opacity: 0 },
-        { transform: transform(dx * .25, -peak * .7, .8, rotation * .15), opacity: 1, offset: .2 },
-        { transform: transform(dx * .58, -peak, 1, rotation * .4), opacity: 1, offset: .42 },
-        { transform: transform(dx * .85, -peak * .35, .95, rotation * .7), opacity: 1, offset: .68 },
-        { transform: transform(dx, innerHeight - originY + 150, .7, rotation), opacity: 0 }
-      ], { duration: 2250 + index % 4 * 100, delay: index * 42, easing: 'linear', fill: 'both' }).finished.catch(() => {});
-    });
-    for (let i = 0; i < 32; i++) {
-      const spark = document.createElement('span'); spark.className = 'champagne-spark'; spark.textContent = i % 2 ? '✦' : '♡';
-      spark.style.left = `${originX}px`; spark.style.top = `${originY}px`; fountainLayer.append(spark);
-      spark.animate([{ transform: 'translate(0,0) scale(.2)', opacity: 0 }, { transform: `translate(${Math.sin(i * 2.4) * innerWidth * .3}px,-${140 + i % 7 * 30}px) scale(1)`, opacity: 1, offset: .45 }, { transform: `translate(${Math.sin(i * 2.4) * innerWidth * .4}px,${innerHeight}px)`, opacity: 0 }], { duration: 2500, delay: i * 25, fill: 'both' });
-    }
-    await Promise.all(flights);
-    fountainLayer.replaceChildren();
-  } else fountainButton.classList.add('open');
-  fountainLetter.hidden = false;
-  fountainButton.setAttribute('aria-expanded', 'true');
-  fountainButton.querySelector('.gift-tap').textContent = 'MỞ LẠI BẤT NGỜ ↗';
-  fountainButton.disabled = false; fountainBusy = false;
-  fountainLetter.scrollIntoView({ behavior: motionOkay() ? 'smooth' : 'instant', block: 'center' });
-  fountainLetter.focus({ preventScroll: true });
-  giftWriter.write();
-});
 
