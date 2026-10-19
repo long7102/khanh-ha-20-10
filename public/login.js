@@ -28,7 +28,7 @@ form.addEventListener('submit', async (event) => {
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
     sessionStorage.setItem('ha-access', config.hash);
-    window.location.replace('./scrapbook.html?v=9');
+    window.location.replace('./scrapbook.html?v=10');
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;
@@ -59,4 +59,3 @@ for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
   floatingPhotos.append(row);
 }
 document.querySelector('.login-scene').prepend(floatingPhotos);
-
