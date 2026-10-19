@@ -20,4 +20,5 @@ Trang dự kiến: https://long7102.github.io/khanh-ha-20-10/
 Sửa trực tiếp HTML, CSS hoặc JavaScript rồi commit. Nhạc hiện là placeholder: thêm file vào `public/media/` và đặt `AUDIO_SRC` trong `public/app.js` thành đường dẫn tương đối, ví dụ `./public/media/our-song.mp3`.
 
 Nếu đổi thông tin đăng nhập, cập nhật hash SHA-256 của chuỗi `username:password:salt` trong `public/access.js`.
+`public/memories.js`: sửa title/paragraph của 27 ảnh và lời nhắn mặt lưng của 4 polaroid. Album sách tự lật khi ở trong màn hình; ảnh có thể rút ra toàn màn hình và trả về trang cũ. Hiệu ứng hỗ trợ prefers-reduced-motion.
 

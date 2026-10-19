@@ -28,7 +28,7 @@ form.addEventListener('submit', async (event) => {
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
     sessionStorage.setItem('ha-access', config.hash);
-    window.location.replace('./scrapbook.html');
+    window.location.replace('./scrapbook.html?v=7');
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;
@@ -49,7 +49,7 @@ for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
     for (let offset = 1; offset <= 9; offset++) {
       const image = document.createElement('img');
       const number = rowIndex * 9 + offset;
-      image.src = `./public/media/photo-${String(number).padStart(2, '0')}.jpg`;
+      image.src = `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=7`;
       image.alt = '';
       image.decoding = 'async';
       group.append(image);

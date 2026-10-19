@@ -16,6 +16,23 @@ satellites.setAttribute('aria-hidden', 'true');
 satellites.innerHTML = '<span>✦</span><span>♡</span><span>✧</span>';
 document.querySelector('.hero').prepend(satellites);
 
+// These four featured cards turn over in place; the book uses the full-screen viewer.
+document.querySelectorAll('.album-grid .photo-card').forEach((card, index) => {
+  const message = window.HA_FEATURED_MESSAGES[index];
+  const inner = document.createElement('span'); inner.className = 'polaroid-flip-inner';
+  const front = document.createElement('span'); front.className = 'polaroid-front-face';
+  while (card.firstChild) front.append(card.firstChild);
+  const back = document.createElement('span'); back.className = 'polaroid-back-face';
+  back.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span'); label.className = 'polaroid-back-label'; label.textContent = 'MỘT LỜI NHẮN · 20/10';
+  const title = document.createElement('strong'); title.textContent = message.title;
+  const body = document.createElement('span'); body.className = 'polaroid-back-message'; body.textContent = message.message;
+  const hint = document.createElement('small'); hint.textContent = 'CHẠM ĐỂ TRỞ LẠI ↻';
+  back.append(label, title, body, hint); inner.append(front, back); card.append(inner);
+  card.setAttribute('aria-pressed', 'false');
+  card.setAttribute('aria-label', `Lật ảnh để đọc lời nhắn: ${message.title}`);
+});
+
 // The book advances only while it is on screen and no picture is open.
 const bookSection = document.createElement('section');
 bookSection.className = 'book-section';
@@ -160,7 +177,13 @@ async function closePortrait() {
 }
 album.addEventListener('click', event => {
   const button = event.target.closest('[data-photo]');
-  if (button) openPortrait(button);
+  if (!button) return;
+  if (button.classList.contains('photo-card')) {
+    const flipped = button.classList.toggle('is-flipped');
+    button.setAttribute('aria-pressed', String(flipped));
+    button.querySelector('.polaroid-front-face').setAttribute('aria-hidden', String(flipped));
+    button.querySelector('.polaroid-back-face').setAttribute('aria-hidden', String(!flipped));
+  } else openPortrait(button);
 });
 viewer.querySelector('#dialog-close').addEventListener('click', closePortrait);
 viewer.addEventListener('cancel', event => { event.preventDefault(); closePortrait(); });

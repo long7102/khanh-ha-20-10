@@ -1,5 +1,5 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const photoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg`;
+const photoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=7`;
 const photoAlt = number => `Ảnh Khánh Hạ trong bộ sưu tập, số ${number}`;
 function attachPhoto(container, number, eager = false) {
   const image = document.createElement('img');
