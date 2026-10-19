@@ -14,15 +14,15 @@ const canEnter = () => preview || release.isOpen();
 let verifiedForRelease = false;
 let enteringScrapbook = false;
 const releaseNote = document.createElement('div'); releaseNote.className = 'release-note';
-releaseNote.innerHTML = '<strong>Món quà mở lúc 00:00 · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Giờ Việt Nam · Em có thể đăng nhập trước để chờ mở quà.</span><span class="release-status" role="status"></span>';
+releaseNote.innerHTML = '<strong>Món quà mở lúc 00:00 · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Tha hồ mà ngồi đợi nhé đồ lùn</span><span class="release-status" role="status"></span>';
 if (preview) releaseNote.innerHTML = '<strong>BẢN XEM THỬ</strong><br><span>Đăng nhập để kiểm tra ngay, không cần chờ giờ mở quà.</span><span class="release-status" role="status"></span>';
 form.before(releaseNote);
 async function enterScrapbook() {
   if (enteringScrapbook || !verifiedForRelease || !canEnter()) return;
   enteringScrapbook = true;
   sessionStorage.setItem('ha-access', window.SCRAPBOOK_ACCESS.hash);
-  submit.textContent = preview ? 'Đang mở bản xem thử…' : 'Chúc mừng 20/10, Hạ ơi ♡';
-  releaseNote.querySelector('.release-status').textContent = preview ? 'Thông tin đúng. Đang chuyển vào trang chính.' : 'Đến giờ rồi, cùng mở món quà nhé.';
+  submit.textContent = preview ? 'Đang mở bản xem thử…' : 'Chúc mừng 20/10, kẹo dâu lùn của anh ♡';
+  releaseNote.querySelector('.release-status').textContent = preview ? 'Đấy, người yêu tôi đấy, khen đi cả nhà.' : 'Đến giờ rồi, cùng mở món quà nhé.';
   loginPanel.inert = true; backgroundToggle.disabled = true;
   document.body.classList.add('entering');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,13 +83,13 @@ form.addEventListener('submit', async (event) => {
     const bytes = new TextEncoder().encode(`${username}:${password}:${config.salt}`);
     const digest = await crypto.subtle.digest('SHA-256', bytes);
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-    if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
+    if (hash !== config.hash) throw new Error('Chưa đúng rồi, không làm được để Nghĩa làm cho.');
     verifiedForRelease = true;
     if (canEnter()) enterScrapbook();
     else {
       loginPanel.classList.add('waiting');
       submit.textContent = 'Đã sẵn sàng · Chờ 00:00 ♡';
-      releaseNote.querySelector('.release-status').textContent = 'Thông tin đã đúng. Em cứ để trang này mở, món quà sẽ tự mở khi đến giờ nhé.';
+      releaseNote.querySelector('.release-status').textContent = 'Thông tin đã đúng. Nhưng bóc quà thì còn lâu nhé.';
       updateRelease();
     }
   } catch (reason) {
