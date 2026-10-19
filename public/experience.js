@@ -174,63 +174,93 @@ const viewer = document.querySelector('#photo-dialog');
 viewer.className = 'photo-dialog photo-viewer';
 viewer.innerHTML = '<button type="button" id="dialog-close" aria-label="Trả ảnh về trang sách">×</button><div class="viewer-layout"><div class="viewer-frame"><img alt=""></div><aside class="viewer-copy"><span class="eyebrow">A PORTRAIT OF HẠ · 20/10</span><h2></h2><p></p><small>Ấn Esc hoặc × để đặt ảnh về trang sách.</small></aside></div>';
 const viewerImage = viewer.querySelector('.viewer-frame img');
+viewerImage.decoding = 'sync';
+const fullPortraits = new Map();
+function warmFullPortrait(button) {
+  const number = Number(button.dataset.photo);
+  const src = window.HA_MEMORIES[number - 1]?.image || fullPhotoPath(number);
+  if (!fullPortraits.has(src)) {
+    const image = new Image(); image.decoding = 'async'; image.src = src;
+    fullPortraits.set(src, { image, ready: image.decode().catch(() => {}) });
+    if (fullPortraits.size > 4) fullPortraits.delete(fullPortraits.keys().next().value);
+  }
+  return fullPortraits.get(src);
+}
+// Start the larger file on intent; opening itself never waits on image decoding.
+for (const type of ['pointerover', 'focusin', 'pointerdown']) {
+  book.addEventListener(type, event => {
+    const button = event.target.closest('.book-photo[data-photo]');
+    if (button) warmFullPortrait(button);
+  }, { passive: true });
+}
 let sourcePhoto = null;
 let sourceButton = null;
 let closingPhoto = false;
 let liftAnimation = null;
 let previousOverflow = '';
+let portraitVisit = 0;
 function photoTransform(from, to) {
   return `translate(${from.left + from.width / 2 - to.left - to.width / 2}px,${from.top + from.height / 2 - to.top - to.height / 2}px) scale(${from.width / to.width},${from.height / to.height})`;
 }
-async function openPortrait(button) {
+function openPortrait(button) {
   if (turning || photoOpen) return;
   const number = Number(button.dataset.photo);
   sourcePhoto = button.querySelector('img');
   if (!sourcePhoto) return;
   photoOpen = true;
   sourceButton = button;
+  const visit = ++portraitVisit;
   book.classList.add('portrait-out');
   const from = sourcePhoto.getBoundingClientRect();
   const memory = window.HA_MEMORIES[number - 1];
-  // Show the decoded book image immediately, then load the full photograph.
-  viewerImage.src = memory.image || photoPath(number);
+  // Reuse the cached, visible preview and its aspect ratio in the same click frame.
+  viewerImage.width = sourcePhoto.naturalWidth || 640;
+  viewerImage.height = sourcePhoto.naturalHeight || 800;
+  viewerImage.src = sourcePhoto.currentSrc || sourcePhoto.src;
   viewerImage.alt = photoAlt(number);
-  await viewerImage.decode().catch(() => {});
+  viewerImage.classList.remove('torn-portrait');
   viewer.querySelector('h2').textContent = (memory.title || memory.caption || `Khánh Hạ · khung hình ${String(number).padStart(2, '0')}`).normalize('NFC');
   const paragraph = viewer.querySelector('.viewer-copy p');
   paragraph.textContent = (memory.text || memory.paragraph || '').normalize('NFC');
   paragraph.hidden = !paragraph.textContent;
-  photoOpen = true;
   previousOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
   viewer.showModal();
   sourcePhoto.style.visibility = 'hidden';
   sourceButton.classList.add('page-torn');
-  viewerImage.classList.add('torn-portrait');
+  viewer.classList.add('lifting');
   if (motionOkay()) {
     const to = viewerImage.getBoundingClientRect();
     liftAnimation = viewerImage.animate([
-      { transform: photoTransform(from, to), opacity: 1 },
-      { transform: photoTransform({ ...from.toJSON(), top: from.top - 65, left: from.left + 22 }, to) + ' rotate(-12deg)', opacity: 1, offset: .3 },
-      { transform: 'translate(0,-18px) scale(1.03) rotate(1deg)', opacity: 1, offset: .8 },
-      { transform: 'none', opacity: 1 }
-    ], { duration: 1000, easing: 'cubic-bezier(.22,.65,.2,1)' });
-    for (let i = 0; i < 7; i++) {
+      { transform: photoTransform(from, to) + ' rotate(-2deg)', opacity: 1 },
+      { transform: 'translate3d(0,0,0) scale(1) rotate(0deg)', opacity: 1 }
+    ], { duration: 650, easing: 'cubic-bezier(.2,.7,.22,1)', fill: 'both' });
+    const lifting = liftAnimation;
+    lifting.finished.then(() => {
+      if (visit !== portraitVisit || closingPhoto) return;
+      lifting.cancel();
+      viewer.classList.remove('lifting');
+      viewerImage.classList.add('torn-portrait');
+    }).catch(() => {});
+    for (let i = 0; i < 4; i++) {
       const scrap = document.createElement('span'); scrap.className = 'paper-fleck';
       scrap.style.left = `${from.left}px`; scrap.style.top = `${from.top + from.height * i / 7}px`;
       viewer.append(scrap);
-      scrap.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${-30 - i * 8}px,${35 + i * 12}px) rotate(${i * 37}deg)`, opacity: 0 }], { duration: 850, delay: i * 35, fill: 'forwards' }).finished.then(() => scrap.remove());
+      scrap.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${-30 - i * 8}px,${35 + i * 12}px) rotate(${i * 37}deg)`, opacity: 0 }], { duration: 600, delay: i * 20, fill: 'forwards' }).finished.then(() => scrap.remove()).catch(() => scrap.remove());
     }
+  } else {
+    liftAnimation = null; viewer.classList.remove('lifting'); viewerImage.classList.add('torn-portrait');
   }
-  const fullPhoto = new Image(); fullPhoto.src = memory.image || fullPhotoPath(number);
-  fullPhoto.decode().then(async () => {
-    await liftAnimation?.finished.catch(() => {});
-    if (photoOpen && !closingPhoto && sourceButton === button) viewerImage.src = fullPhoto.src;
+  const fullPhoto = warmFullPortrait(button);
+  const lifted = liftAnimation?.finished.catch(() => {});
+  Promise.all([fullPhoto.ready, lifted]).then(() => {
+    if (photoOpen && !closingPhoto && visit === portraitVisit && fullPhoto.image.naturalWidth) viewerImage.src = fullPhoto.image.src;
   }).catch(() => {});
 }
 async function closePortrait() {
   if (!photoOpen || closingPhoto) return;
   closingPhoto = true;
+  portraitVisit++;
   if (motionOkay() && sourcePhoto?.isConnected) {
     // A small decoded proxy avoids resampling the full-resolution image on return.
     const target = sourcePhoto.getBoundingClientRect();
@@ -239,7 +269,6 @@ async function closePortrait() {
     proxy.setAttribute('aria-hidden', 'true');
     proxy.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
     viewer.append(proxy);
-    await proxy.decode().catch(() => {});
     viewerImage.style.visibility = 'hidden'; liftAnimation?.cancel();
     viewer.classList.add('returning');
     await proxy.animate([{ transform: 'translate3d(0,0,0) scale(1)' }, { transform: photoTransform(target, from) }], { duration: 850, easing: 'cubic-bezier(.22,.7,.25,1)', fill: 'forwards' }).finished.catch(() => {});
@@ -250,7 +279,7 @@ async function closePortrait() {
   if (sourcePhoto) sourcePhoto.style.visibility = '';
   sourceButton?.classList.remove('page-torn');
   viewer.close();
-  viewer.classList.remove('returning'); viewerImage.style.visibility = '';
+  viewer.classList.remove('returning', 'lifting'); viewerImage.style.visibility = '';
   viewerImage.getAnimations().forEach(animation => animation.cancel());
   document.body.style.overflow = previousOverflow;
   sourceButton?.focus({ preventScroll: true });

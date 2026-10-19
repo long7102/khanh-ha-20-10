@@ -1,0 +1,3 @@
+/* During the lift, animate a small cached texture with compositor transforms. */
+.photo-viewer.lifting .viewer-frame img{clip-path:none;box-shadow:0 8px 22px #00182755;backface-visibility:hidden;transform-origin:center;will-change:transform}
+.photo-viewer.lifting .viewer-copy{animation-delay:.08s}
