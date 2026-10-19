@@ -73,11 +73,11 @@ form.addEventListener('submit', async (event) => {
   const username = form.elements.namedItem('username').value.trim();
   const password = form.elements.namedItem('password').value;
   if (!username || !password) {
-    error.textContent = 'Em nhập đủ tên đăng nhập và mật khẩu nhé.';
+    error.textContent = 'Ai đây, giả danh bạn gái tôi đúng không !!!!.';
     return;
   }
   submit.disabled = true;
-  submit.textContent = 'Đang mở cuốn scrapbook…';
+  submit.textContent = 'Đang tiến đến bất ngờ tiếp theo…';
   try {
     const config = window.SCRAPBOOK_ACCESS;
     const bytes = new TextEncoder().encode(`${username}:${password}:${config.salt}`);
