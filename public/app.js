@@ -22,7 +22,7 @@ document.querySelectorAll('.photo-card').forEach((card, index) => {
   card.dataset.photo = String(number);
   card.dataset.caption = `Khánh Hạ, một tấm ảnh trong hành trình từ tóc ngắn đến tóc dài · ${String(number).padStart(2, '0')} / 27`;
   attachPhoto(card.querySelector('.photo-slot'), number);
-  const title = ['tóc ngắn, trang đầu', 'dịu dàng một chút', 'thêm một kỷ niệm', 'ngày tóc dài hơn'][index];
+  const title = ['ngày đầu mới yêu', 'dịu dàng hơn chút', 'thêm một chút kỷ niệm', 'ngày em đáng yêu hơn'][index];
   card.querySelector('.photo-caption').firstChild.textContent = `${title} `;
 });
 
@@ -153,7 +153,7 @@ document.querySelector('#game-reset').addEventListener('click', () => {
   loveChoice.style.top = '24%';
   choiceStage.hidden = false;
   instruction.hidden = false;
-  instruction.textContent = 'Hình như có một ô hơi nghịch ngợm...';
+  instruction.textContent = 'Bảo bối à, em lại quậy rồi...';
   reward.hidden = true;
   hateChoice.focus();
 });
