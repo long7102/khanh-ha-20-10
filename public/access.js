@@ -7,5 +7,5 @@ window.HA_PREVIEW = new URLSearchParams(window.location.search).get('preview') =
 if (document.documentElement.dataset.page === 'scrapbook' &&
     ((!window.HA_PREVIEW && !window.HA_RELEASE?.isOpen()) || sessionStorage.getItem('ha-access') !== window.SCRAPBOOK_ACCESS.hash)) {
   document.documentElement.style.visibility = 'hidden';
-  window.location.replace(`./index.html?v=15${window.HA_PREVIEW ? '&preview=1' : ''}`);
+  window.location.replace(`./index.html?v=17${window.HA_PREVIEW ? '&preview=1' : ''}`);
 }

@@ -14,8 +14,26 @@ function attachPhoto(container, number, eager = false) {
   container.append(image);
   return image;
 }
-attachPhoto(document.querySelector('.hero-card-back .hero-art-inner'), 1, true);
-attachPhoto(document.querySelector('.hero-card-front .hero-art-inner'), 27, true);
+document.querySelectorAll('.hero-card').forEach((card, index) => {
+  const config = window.HA_HERO_PHOTOS[index];
+  const image = attachPhoto(card.querySelector('.hero-art-inner'), config.photo, true);
+  if (config.image) image.src = config.image;
+  image.style.objectPosition = config.position || '50% 28%';
+  card.querySelector('.hero-caption').textContent = config.caption;
+  card.setAttribute('aria-label', config.caption);
+});
+const heroArtwork = document.querySelector('.hero-art');
+const selectHeroCard = card => {
+  heroArtwork.classList.toggle('has-active-card', !!card);
+  heroArtwork.querySelectorAll('.hero-card').forEach(item => item.classList.toggle('is-active', item === card));
+};
+heroArtwork.querySelectorAll('.hero-card').forEach(card => {
+  card.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') selectHeroCard(card); });
+  card.addEventListener('focus', () => selectHeroCard(card));
+  card.addEventListener('click', () => selectHeroCard(card));
+});
+heroArtwork.addEventListener('pointerleave', () => { if (!heroArtwork.contains(document.activeElement)) selectHeroCard(null); });
+heroArtwork.addEventListener('focusout', event => { if (!heroArtwork.contains(event.relatedTarget)) selectHeroCard(null); });
 const featured = [1, 9, 18, 27];
 document.querySelectorAll('.photo-card').forEach((card, index) => {
   const number = featured[index];
@@ -95,7 +113,7 @@ if (!reducedMotion.matches) {
   }, { passive: true });
   updateScrollEffects();
 
-  document.querySelectorAll('.hero-card, .photo-card, .film-card').forEach(card => {
+  document.querySelectorAll('.photo-card, .film-card').forEach(card => {
     card.addEventListener('pointermove', event => {
       if (event.pointerType === 'touch') return;
       const rect = card.getBoundingClientRect();

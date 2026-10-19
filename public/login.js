@@ -8,6 +8,10 @@ backgroundToggle.textContent = 'Ẩn form · Ngắm đại dương';
 backgroundToggle.setAttribute('aria-expanded', 'true');
 loginPanel.id = 'login-panel'; backgroundToggle.setAttribute('aria-controls', 'login-panel');
 document.body.append(backgroundToggle);
+const voyage = document.createElement('div'); voyage.className = 'login-voyage'; voyage.hidden = true;
+voyage.setAttribute('role', 'status'); voyage.setAttribute('aria-live', 'polite');
+voyage.innerHTML = '<div class="voyage-scene" aria-hidden="true"><div class="voyage-ring"></div><svg viewBox="0 0 100 48"><path d="M22 24Q52-8 85 24Q52 56 22 24L5 8V40Z" fill="currentColor"/><circle cx="73" cy="21" r="2.4" fill="#174b61"/></svg><i></i><i></i><i></i></div><span class="eyebrow">MỘT ĐẠI DƯƠNG DÀNH RIÊNG CHO EM</span><h2>Cùng lặn xuống<br><em>một chút nhé…</em></h2><p>Đang gom những điều bất ngờ cho Hạ.</p><div class="voyage-progress" aria-hidden="true"><span></span></div>';
+document.body.append(voyage);
 const release = window.HA_RELEASE;
 const preview = window.HA_PREVIEW === true;
 const canEnter = () => preview || release.isOpen();
@@ -25,9 +29,10 @@ async function enterScrapbook() {
   releaseNote.querySelector('.release-status').textContent = preview ? 'Đấy, người yêu tôi đấy, khen đi cả nhà.' : 'Đến giờ rồi, cùng mở món quà nhé.';
   loginPanel.inert = true; backgroundToggle.disabled = true;
   document.body.classList.add('entering');
+  voyage.hidden = false;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 760));
-  window.location.replace(`./scrapbook.html?v=15${preview ? '&preview=1' : ''}`);
+  await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 1700));
+  window.location.replace(`./scrapbook.html?v=17${preview ? '&preview=1' : ''}`);
 }
 function updateRelease() {
   const open = canEnter();

@@ -59,7 +59,7 @@ const decodedPages = new Map();
 function warmPhoto(number) {
   if (number > 27) return Promise.resolve();
   if (!decodedPages.has(number)) {
-    const image = new Image(); image.src = photoPath(number);
+    const image = new Image(); image.src = window.HA_MEMORIES[number - 1]?.image || photoPath(number);
     decodedPages.set(number, image.decode().catch(() => {}));
   }
   return decodedPages.get(number);
@@ -72,16 +72,19 @@ function fillPage(page, number) {
     return;
   }
   const button = document.createElement('button');
+  const memory = window.HA_MEMORIES[number - 1];
+  const captionText = memory.caption || memory.title || `Khung hình ${String(number).padStart(2, '0')}`;
   button.type = 'button';
   button.className = 'book-photo';
   button.dataset.photo = String(number);
-  button.setAttribute('aria-label', `Mở ảnh ${number}: ${window.HA_MEMORIES[number - 1].title}`);
+  button.setAttribute('aria-label', `Mở ảnh ${number}: ${captionText}`);
   const image = document.createElement('img');
-  image.src = photoPath(number);
+  image.src = memory.image || photoPath(number);
+  image.style.objectPosition = memory.position || '50% 26%';
   image.alt = photoAlt(number);
   image.decoding = 'async';
   const caption = document.createElement('span');
-  caption.textContent = window.HA_MEMORIES[number - 1].title;
+  caption.textContent = captionText.normalize('NFC');
   button.append(image, caption);
   const pageNumber = document.createElement('small');
   pageNumber.className = 'book-page-number';
@@ -190,13 +193,13 @@ async function openPortrait(button) {
   const from = sourcePhoto.getBoundingClientRect();
   const memory = window.HA_MEMORIES[number - 1];
   // Show the decoded book image immediately, then load the full photograph.
-  viewerImage.src = photoPath(number);
+  viewerImage.src = memory.image || photoPath(number);
   viewerImage.alt = photoAlt(number);
   await viewerImage.decode().catch(() => {});
-  viewer.querySelector('h2').textContent = memory.title;
+  viewer.querySelector('h2').textContent = (memory.title || memory.caption || `Khánh Hạ · khung hình ${String(number).padStart(2, '0')}`).normalize('NFC');
   const paragraph = viewer.querySelector('.viewer-copy p');
-  paragraph.textContent = memory.paragraph;
-  paragraph.hidden = !memory.paragraph;
+  paragraph.textContent = (memory.text || memory.paragraph || '').normalize('NFC');
+  paragraph.hidden = !paragraph.textContent;
   photoOpen = true;
   previousOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
@@ -219,7 +222,7 @@ async function openPortrait(button) {
       scrap.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${-30 - i * 8}px,${35 + i * 12}px) rotate(${i * 37}deg)`, opacity: 0 }], { duration: 850, delay: i * 35, fill: 'forwards' }).finished.then(() => scrap.remove());
     }
   }
-  const fullPhoto = new Image(); fullPhoto.src = fullPhotoPath(number);
+  const fullPhoto = new Image(); fullPhoto.src = memory.image || fullPhotoPath(number);
   fullPhoto.decode().then(async () => {
     await liftAnimation?.finished.catch(() => {});
     if (photoOpen && !closingPhoto && sourceButton === button) viewerImage.src = fullPhoto.src;
@@ -271,7 +274,11 @@ viewer.addEventListener('click', event => { if (event.target === viewer) closePo
 
 // Write actual characters, with a complete-text shortcut and full accessible copy.
 function prepareLetter(container) {
-  const paragraphs = [...container.querySelectorAll('p')].map(p => ({ p, text: p.textContent, ink: null }));
+  const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('vi', { granularity: 'grapheme' }) : null;
+  const paragraphs = [...container.querySelectorAll('p')].map(p => {
+    const text = p.textContent.normalize('NFC');
+    return { p, text, letters: segmenter ? [...segmenter.segment(text)].map(item => item.segment) : [...text], ink: null };
+  });
   const skip = document.createElement('button');
   skip.type = 'button'; skip.className = 'letter-skip'; skip.textContent = 'Đọc toàn bộ thư ↗';
   skip.hidden = true;
@@ -303,9 +310,10 @@ function prepareLetter(container) {
         function frame(now) {
           if (current !== generation) { resolve(); return; }
           started ??= now;
-          const count = Math.min(item.text.length, Math.floor((now - started) * .032));
-          item.ink.textContent = item.text.slice(0, count);
-          if (count < item.text.length) requestAnimationFrame(frame); else resolve();
+          const count = Math.min(item.letters.length, Math.floor((now - started) * .032));
+          const copy = item.letters.slice(0, count).join('');
+          if (item.ink.textContent !== copy) item.ink.textContent = copy;
+          if (count < item.letters.length) requestAnimationFrame(frame); else resolve();
         }
         requestAnimationFrame(frame);
       });
