@@ -18,7 +18,7 @@ const canEnter = () => preview || release.isOpen();
 let verifiedForRelease = false;
 let enteringScrapbook = false;
 const releaseNote = document.createElement('div'); releaseNote.className = 'release-note';
-releaseNote.innerHTML = '<strong>Món quà mở lúc 00:00 · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Tha hồ mà ngồi đợi nhé đồ lùn</span><span class="release-status" role="status"></span>';
+releaseNote.innerHTML = '<strong>Món quà mở khi sang ngày mới · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Tha hồ mà ngồi đợi nhé đồ lùn</span><span class="release-status" role="status"></span>';
 if (preview) releaseNote.innerHTML = '<strong>BẢN XEM THỬ</strong><br><span>Đăng nhập để kiểm tra ngay, không cần chờ giờ mở quà.</span><span class="release-status" role="status"></span>';
 form.before(releaseNote);
 async function enterScrapbook() {
@@ -93,7 +93,7 @@ form.addEventListener('submit', async (event) => {
     if (canEnter()) enterScrapbook();
     else {
       loginPanel.classList.add('waiting');
-      submit.textContent = 'Đã sẵn sàng · Chờ 00:00 ♡';
+      submit.textContent = 'Quà thì có rồi, nhưng vẫn phải đợi ♡';
       releaseNote.querySelector('.release-status').textContent = 'Thông tin đã đúng. Nhưng bóc quà thì còn lâu nhé.';
       updateRelease();
     }
