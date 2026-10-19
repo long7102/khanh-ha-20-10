@@ -17,7 +17,8 @@
     for (const node of nodes) {
       const ink = document.createElement('span');
       ink.className = 'type-ink';
-      const text = [...node.textContent];
+      const normalized = node.textContent.normalize('NFC');
+      const text = typeof Intl.Segmenter === 'function' ? [...new Intl.Segmenter('vi', { granularity: 'grapheme' }).segment(normalized)].map(item => item.segment) : [...normalized];
       node.replaceWith(ink); parts.push({ ink, text, speed: element.tagName === 'H1' ? 65 : 29 });
     }
   }

@@ -27,7 +27,7 @@ async function enterScrapbook() {
   document.body.classList.add('entering');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 760));
-  window.location.replace(`./scrapbook.html?v=15${preview ? '&preview=1' : ''}`);
+  window.location.replace(`./scrapbook.html?v=16${preview ? '&preview=1' : ''}`);
 }
 function updateRelease() {
   const open = canEnter();
