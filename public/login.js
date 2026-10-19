@@ -9,33 +9,36 @@ backgroundToggle.setAttribute('aria-expanded', 'true');
 loginPanel.id = 'login-panel'; backgroundToggle.setAttribute('aria-controls', 'login-panel');
 document.body.append(backgroundToggle);
 const release = window.HA_RELEASE;
+const preview = window.HA_PREVIEW === true;
+const canEnter = () => preview || release.isOpen();
 let verifiedForRelease = false;
 let enteringScrapbook = false;
 const releaseNote = document.createElement('div'); releaseNote.className = 'release-note';
 releaseNote.innerHTML = '<strong>Món quà mở lúc 00:00 · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Giờ Việt Nam · Em có thể đăng nhập trước để chờ mở quà.</span><span class="release-status" role="status"></span>';
+if (preview) releaseNote.innerHTML = '<strong>BẢN XEM THỬ</strong><br><span>Đăng nhập để kiểm tra ngay, không cần chờ giờ mở quà.</span><span class="release-status" role="status"></span>';
 form.before(releaseNote);
 async function enterScrapbook() {
-  if (enteringScrapbook || !verifiedForRelease || !release.isOpen()) return;
+  if (enteringScrapbook || !verifiedForRelease || !canEnter()) return;
   enteringScrapbook = true;
   sessionStorage.setItem('ha-access', window.SCRAPBOOK_ACCESS.hash);
-  submit.textContent = 'Chúc mừng 20/10, Hạ ơi ♡';
-  releaseNote.querySelector('.release-status').textContent = 'Đến giờ rồi, cùng mở món quà nhé.';
+  submit.textContent = preview ? 'Đang mở bản xem thử…' : 'Chúc mừng 20/10, Hạ ơi ♡';
+  releaseNote.querySelector('.release-status').textContent = preview ? 'Thông tin đúng. Đang chuyển vào trang chính.' : 'Đến giờ rồi, cùng mở món quà nhé.';
   loginPanel.inert = true; backgroundToggle.disabled = true;
   document.body.classList.add('entering');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 760));
-  window.location.replace('./scrapbook.html?v=14');
+  window.location.replace(`./scrapbook.html?v=15${preview ? '&preview=1' : ''}`);
 }
 function updateRelease() {
-  const open = release.isOpen();
-  releaseNote.hidden = open && !verifiedForRelease;
+  const open = canEnter();
+  releaseNote.hidden = open && !verifiedForRelease && !preview;
   if (!open) releaseNote.querySelector('.release-countdown').textContent = release.countdown();
   if (open && verifiedForRelease) enterScrapbook();
 }
 // Align the final tick with the release boundary rather than waiting a full second.
 function scheduleReleaseTick() {
   updateRelease();
-  if (!release.isOpen() && !enteringScrapbook) setTimeout(scheduleReleaseTick, Math.min(1000, Math.max(10, release.remaining())));
+  if (!canEnter() && !enteringScrapbook) setTimeout(scheduleReleaseTick, Math.min(1000, Math.max(10, release.remaining())));
 }
 scheduleReleaseTick();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) updateRelease(); });
@@ -82,7 +85,7 @@ form.addEventListener('submit', async (event) => {
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
     verifiedForRelease = true;
-    if (release.isOpen()) enterScrapbook();
+    if (canEnter()) enterScrapbook();
     else {
       loginPanel.classList.add('waiting');
       submit.textContent = 'Đã sẵn sàng · Chờ 00:00 ♡';
