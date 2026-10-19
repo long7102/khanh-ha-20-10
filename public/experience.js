@@ -96,7 +96,7 @@ async function turnBook(direction = 1) {
   if (!motionOkay()) { spreadStart = next; paintBook(); return; }
   turning = true;
   await warmSpread(next);
-  if (photoOpen) { turning = false; return; }
+  if (photoOpen || !motionOkay()) { turning = false; return; }
   const leaf = document.createElement('div');
   leaf.className = `turning-leaf${direction < 0 ? ' backwards' : ''}`;
   const front = document.createElement('div');
@@ -114,7 +114,8 @@ async function turnBook(direction = 1) {
     if (direction > 0) fillPage(leftPage, spreadStart);
     else fillPage(rightPage, spreadStart + 1);
     bookSection.querySelector('.book-status').textContent = `TRANG ${String(spreadStart).padStart(2, '0')} — ${Math.min(27, spreadStart + 1)} / 27`;
-    requestAnimationFrame(() => { leaf.remove(); turning = false; });
+    // Keep the decoded destination below the turning leaf for one full paint.
+    requestAnimationFrame(() => requestAnimationFrame(() => { leaf.remove(); turning = false; }));
     warmSpread(spreadStart >= 27 ? 1 : spreadStart + 2);
   }, { once: true });
 }
@@ -157,8 +158,10 @@ async function openPortrait(button) {
   if (!sourcePhoto) return;
   photoOpen = true;
   sourceButton = button;
+  book.classList.add('portrait-out');
   const from = sourcePhoto.getBoundingClientRect();
   const memory = window.HA_MEMORIES[number - 1];
+  // Show the decoded book image immediately, then load the full photograph.
   viewerImage.src = photoPath(number);
   viewerImage.alt = photoAlt(number);
   await viewerImage.decode().catch(() => {});
@@ -176,11 +179,11 @@ async function openPortrait(button) {
   if (motionOkay()) {
     const to = viewerImage.getBoundingClientRect();
     liftAnimation = viewerImage.animate([
-      { transform: photoTransform(from, to), opacity: 1, clipPath: 'inset(0)' },
-      { transform: photoTransform({ ...from.toJSON(), top: from.top - 65, left: from.left + 22 }, to) + ' rotate(-12deg)', opacity: 1, offset: .3, clipPath: 'polygon(2% 0,100% 0,100% 100%,2% 100%,0 92%,2% 84%,0 76%,2% 68%,0 60%,2% 52%,0 44%,2% 36%,0 28%,2% 20%,0 12%)' },
+      { transform: photoTransform(from, to), opacity: 1 },
+      { transform: photoTransform({ ...from.toJSON(), top: from.top - 65, left: from.left + 22 }, to) + ' rotate(-12deg)', opacity: 1, offset: .3 },
       { transform: 'translate(0,-18px) scale(1.03) rotate(1deg)', opacity: 1, offset: .8 },
       { transform: 'none', opacity: 1 }
-    ], { duration: 1050, easing: 'cubic-bezier(.22,.65,.2,1)' });
+    ], { duration: 1000, easing: 'cubic-bezier(.22,.65,.2,1)' });
     for (let i = 0; i < 7; i++) {
       const scrap = document.createElement('span'); scrap.className = 'paper-fleck';
       scrap.style.left = `${from.left}px`; scrap.style.top = `${from.top + from.height * i / 7}px`;
@@ -188,22 +191,30 @@ async function openPortrait(button) {
       scrap.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${-30 - i * 8}px,${35 + i * 12}px) rotate(${i * 37}deg)`, opacity: 0 }], { duration: 850, delay: i * 35, fill: 'forwards' }).finished.then(() => scrap.remove());
     }
   }
+  const fullPhoto = new Image(); fullPhoto.src = fullPhotoPath(number);
+  fullPhoto.decode().then(async () => {
+    await liftAnimation?.finished.catch(() => {});
+    if (photoOpen && !closingPhoto && sourceButton === button) viewerImage.src = fullPhoto.src;
+  }).catch(() => {});
 }
 async function closePortrait() {
   if (!photoOpen || closingPhoto) return;
   closingPhoto = true;
+  // Finish the lift before returning, avoiding a jump from an intermediate pose.
+  await liftAnimation?.finished.catch(() => {});
   liftAnimation?.cancel();
   if (motionOkay() && sourcePhoto?.isConnected) {
     const target = sourcePhoto.getBoundingClientRect();
     const from = viewerImage.getBoundingClientRect();
-    await viewerImage.animate([{ transform: 'none', opacity: 1 }, { transform: photoTransform(target, from) + ' rotate(-4deg)', opacity: .8 }], { duration: 480, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' }).finished.catch(() => {});
+    await viewerImage.animate([{ transform: 'none', opacity: 1 }, { transform: photoTransform(target, from), opacity: 1 }], { duration: 760, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }).finished.catch(() => {});
   }
-  viewer.close();
   if (sourcePhoto) sourcePhoto.style.visibility = '';
   sourceButton?.classList.remove('page-torn');
+  viewer.close();
   viewerImage.getAnimations().forEach(animation => animation.cancel());
   document.body.style.overflow = previousOverflow;
   sourceButton?.focus({ preventScroll: true });
+  book.classList.remove('portrait-out');
   photoOpen = false; closingPhoto = false;
 }
 album.addEventListener('click', event => {
@@ -254,7 +265,7 @@ function prepareLetter(container) {
         function frame(now) {
           if (current !== generation) { resolve(); return; }
           started ??= now;
-          const count = Math.min(item.text.length, Math.floor((now - started) * .09));
+          const count = Math.min(item.text.length, Math.floor((now - started) * .032));
           item.ink.textContent = item.text.slice(0, count);
           if (count < item.text.length) requestAnimationFrame(frame); else resolve();
         }
@@ -272,5 +283,4 @@ const letterObserver = new IntersectionObserver(entries => {
   if (entries.some(entry => entry.isIntersecting)) { mainWriter.write(); letterObserver.disconnect(); }
 }, { threshold: .16 });
 letterObserver.observe(mainLetter);
-
 

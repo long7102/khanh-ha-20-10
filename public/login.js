@@ -28,7 +28,7 @@ form.addEventListener('submit', async (event) => {
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
     sessionStorage.setItem('ha-access', config.hash);
-    window.location.replace('./scrapbook.html?v=10');
+    window.location.replace('./scrapbook.html?v=11');
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;
@@ -49,7 +49,7 @@ for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
     for (let offset = 1; offset <= 9; offset++) {
       const image = document.createElement('img');
       const number = rowIndex * 9 + offset;
-      image.src = `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=8`;
+      image.src = `./public/media/previews/photo-${String(number).padStart(2, '0')}.webp?v=11`;
       image.alt = '';
       image.decoding = 'async';
       group.append(image);
@@ -59,3 +59,18 @@ for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
   floatingPhotos.append(row);
 }
 document.querySelector('.login-scene').prepend(floatingPhotos);
+const loginSea = document.createElement('div');
+loginSea.className = 'login-fish'; loginSea.setAttribute('aria-hidden', 'true');
+loginSea.innerHTML = '<div class="login-water-rays"></div>';
+for (let i = 0; i < 7; i++) {
+  const fish = document.createElement('span'); fish.className = 'sea-fish';
+  fish.style.cssText = `--depth:${12 + i * 12}%;--size:${30 + i % 3 * 13}px;--swim:${38 + i * 7}s;--delay:${-i * 13}s`;
+  fish.innerHTML = '<svg viewBox="0 0 90 40" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M22 20Q45-4 75 20Q45 44 22 20L7 7V33Z"/><circle cx="62" cy="17" r="1.5" fill="currentColor"/><path d="M42 9l8-7 5 8M42 31l8 7 5-8"/></svg>';
+  loginSea.append(fish);
+}
+for (let i = 0; i < 12; i++) {
+  const bubble = document.createElement('span'); bubble.className = 'login-bubble';
+  bubble.style.cssText = `--left:${i * 8.5}%;--bubble:${5 + i % 4 * 4}px;--rise:${19 + i * 2}s;--delay:${-i * 4}s`;
+  loginSea.append(bubble);
+}
+document.querySelector('.login-scene').append(loginSea);

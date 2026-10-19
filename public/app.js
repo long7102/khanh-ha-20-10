@@ -1,5 +1,6 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const photoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=8`;
+const fullPhotoPath = number => `./public/media/photo-${String(number).padStart(2, '0')}.jpg?v=8`;
+const photoPath = number => `./public/media/previews/photo-${String(number).padStart(2, '0')}.webp?v=11`;
 const photoAlt = number => `Ảnh Khánh Hạ trong bộ sưu tập, số ${number}`;
 function attachPhoto(container, number, eager = false) {
   const image = document.createElement('img');
@@ -155,4 +156,3 @@ document.querySelector('#game-reset').addEventListener('click', () => {
   reward.hidden = true;
   hateChoice.focus();
 });
-
