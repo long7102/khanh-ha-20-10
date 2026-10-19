@@ -1,0 +1,32 @@
+/* Shared edges keep the page block square inside its cloth cover. */
+.bound-album .memory-book{transform:none;rotate:0;translate:none;width:100%;min-width:0}
+.bound-album .album-cover{box-sizing:border-box}
+/* A compact, wrapped bouquet balances the portrait instead of floating stems. */
+.finale-composition{grid-template-columns:1.1fr 1fr;gap:24px;max-width:720px;align-items:center;margin-top:24px}
+.finale-garden{align-self:center;max-width:350px;margin:0 auto;opacity:0;transform:translateY(18px)}
+.botanical-bouquet{width:100%;overflow:visible;filter:drop-shadow(0 15px 17px #001c3040)}
+.botanical-bouquet .bouquet-stems path{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}
+.botanical-bouquet .bouquet-flower{transform-origin:0 0}
+.is-blooming .finale-garden{animation:bouquetArrive 1.2s cubic-bezier(.2,.7,.2,1) .1s both}
+.is-blooming .botanical-bouquet .bouquet-flower{animation:botanicalOpen 1.1s ease-out var(--bloom-delay) both}
+.finale-portrait{margin:0 auto 12px;width:min(100%,280px)}
+@keyframes bouquetArrive{to{opacity:1;transform:none}}
+@keyframes botanicalOpen{from{opacity:0;transform:scale(.87)}to{opacity:1;transform:scale(1)}}
+/* A solid blue gift with a satin band, beveled lid and subtle paper grain. */
+.gift-button{isolation:isolate;height:295px;touch-action:manipulation}
+.gift-button:before{content:'';position:absolute;left:15px;right:15px;bottom:21px;height:32px;background:radial-gradient(ellipse,#031d3666,transparent 70%);filter:blur(4px);z-index:-1}
+.gift-box{bottom:43px;height:142px;border-radius:3px 4px 6px 6px;background:linear-gradient(110deg,#79b9d2 0%,#4a96bb 38%,#317999 89%,#23647f 90%,#1b516c 100%);border:1px solid #9ed7e433;box-shadow:inset 0 9px 10px #103a5c45,inset 1px 0 #c4edf955,0 20px 30px #052b4540;overflow:hidden}
+.gift-box:before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(110deg,#ffffff05 0 1px,transparent 1px 4px);pointer-events:none}
+.gift-box:after{content:'';position:absolute;right:16px;top:0;bottom:0;width:1px;background:#b9e7f52b}
+.gift-ribbon{left:75px;width:31px;background:linear-gradient(90deg,#b79b68,#f6e4bc 12%,#fff4d8 42%,#ead1a0 88%,#bc9c64);box-shadow:2px 0 5px #1c506c33,-1px 0 2px #fff4d133;border-left:1px solid #fff3cf88;border-right:1px solid #c6ab7980}
+.gift-lid{bottom:179px;height:35px;left:26px;width:208px;border-radius:4px;background:linear-gradient(180deg,#abd7e5 0%,#6cacc8 17%,#5698b8 60%,#387e9e 91%,#296884 93%);border:1px solid #b6e8ef66;box-shadow:inset 0 2px 1px #dbf8ff77,inset -15px 0 #174c6625,0 7px 11px #072b4645;transform-origin:70% 70%;transition:transform .85s cubic-bezier(.22,.7,.22,1),box-shadow .85s}
+.gift-lid:before{display:none}.gift-lid:after{content:'';display:block;position:absolute;top:0;bottom:0;left:88px;right:auto;width:31px;height:auto;border:0;border-radius:0;background:linear-gradient(90deg,#c1a46e,#fff0ce 20%,#fff7df 42%,#dfc18d);transform:none;box-shadow:1px 0 2px #244f6244}
+.satin-bow{position:absolute;z-index:3;width:170px;height:103px;left:50%;bottom:9px;transform:translateX(-50%);filter:drop-shadow(1px 5px 3px #173e4d55);pointer-events:none}
+.satin-bow svg{display:block;width:100%;height:100%;overflow:visible}
+.gift-button:not(.open):hover .gift-lid{transform:translateY(-7px) rotate(-2deg);box-shadow:0 12px 18px #052b4655}
+.gift-button.open .gift-lid,.gift-button.open:disabled:hover .gift-lid{transform:translateY(-68px) rotate(-12deg);box-shadow:0 15px 22px #052b4633}
+.gift-button:focus-visible{outline:2px solid #bdeefe;outline-offset:12px;border-radius:16px}
+.gift-button:not(.open) .satin-bow{animation:satinBreathe 5s ease-in-out infinite;transform-origin:50% 78%}
+@keyframes satinBreathe{50%{transform:translateX(-50%) rotate(1.5deg)}}
+@media(max-width:760px){.finale-composition{display:grid;grid-template-columns:1fr;gap:8px;margin-top:28px}.finale-portrait{grid-row:1;width:220px;margin:0 auto}.finale-garden{grid-row:2;width:min(100%,285px);max-width:285px;margin:0 auto;align-self:center}.ocean-finale{padding-bottom:24px}.gift-button{margin-top:48px}}
+@media(prefers-reduced-motion:reduce){.finale-garden,.is-blooming .finale-garden{opacity:1;transform:none;animation:none}.is-blooming .botanical-bouquet .bouquet-flower{opacity:1;transform:none;animation:none}.gift-button .satin-bow{animation:none!important}.gift-lid{transition:none}}

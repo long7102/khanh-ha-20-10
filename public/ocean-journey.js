@@ -88,20 +88,55 @@
   const message = document.createElement('p'); message.textContent = finaleConfig.message || 'Mong em luôn được yêu thương, tự do lớn lên và nở hoa theo cách của riêng mình.';
   heading.append(label, title, message);
   const garden = document.createElement('div'); garden.className = 'finale-garden';
-  garden.innerHTML = '<svg class="coral-bouquet" viewBox="0 0 500 520" aria-hidden="true"><g class="bouquet-stems" fill="none" stroke="#8ac6ba" stroke-width="5" stroke-linecap="round"><path pathLength="1" d="M250 470Q175 360 125 175M250 470Q205 320 210 110M250 470Q290 320 300 145M250 470Q345 350 370 205M250 470Q180 420 90 305M250 470Q330 400 420 320"/><path pathLength="1" d="M165 286q-65-18-65-72m68 83q27-50 7-80M225 258q-48-33-42-69m53 128q56-25 58-70m31 63q-35-45-21-71m-94 153q-63 2-83-41m142 55q62-5 88-47"/></g><g class="bouquet-leaves" fill="#70b5a3"><path d="M209 382q-82-5-97-51 69-11 97 51M281 367q74-50 95-27-24 54-95 27M230 310q-60-24-64-60 62-1 64 60M291 297q20-68 62-66-4 53-62 66"/></g><path class="bouquet-ribbon" d="M213 435q-80-48-55-70 39-16 92 63 53-79 92-63 25 22-55 70l30 50-67-25-67 25Z" fill="#b5e1eb" opacity=".9"/></svg>';
-  const flowerPoints = [[125,175,31,'#eeb6b8'],[210,110,36,'#d6eaf1'],[300,145,34,'#f4d6bd'],[370,205,31,'#d7e8f5'],[90,305,25,'#efd8cf'],[420,320,26,'#efc5ce']];
-  const svg = garden.querySelector('svg');
-  flowerPoints.forEach(([x,y,size,color], index) => {
-    const flower = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    flower.setAttribute('transform', `translate(${x} ${y})`);
-    const petals = document.createElementNS('http://www.w3.org/2000/svg', 'g'); petals.classList.add('bouquet-flower');
-    petals.style.setProperty('--bloom-delay', `${.6 + index * .16}s`);
-    for (let p = 0; p < 6; p++) {
-      const petal = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-      petal.setAttribute('cx', '0'); petal.setAttribute('cy', String(-size * .52)); petal.setAttribute('rx', String(size * .42)); petal.setAttribute('ry', String(size * .65)); petal.setAttribute('fill', color); petal.setAttribute('transform', `rotate(${p * 60})`); petals.append(petal);
+  // A gathered botanical bouquet, with layered blooms and folded wrapping paper.
+  const flower = (x, y, size, shade, delay) => {
+    let petals = '';
+    [[12,1,.33],[9,.72,.29],[6,.44,.24]].forEach(([count,scale,width], layer) => {
+      for (let p = 0; p < count; p++) petals += `<ellipse cx="0" cy="${-size * .43 * scale}" rx="${size * width * scale}" ry="${size * .58 * scale}" transform="rotate(${p * 360 / count + layer * 19})" fill="url(#${shade})" stroke="#cbbcab" stroke-opacity=".2" stroke-width=".7"/>`;
+    });
+    return `<g transform="translate(${x} ${y})"><g class="bouquet-flower" style="--bloom-delay:${delay}s">${petals}<path d="M-7 0q1-12 12-6t-4 13q-9-1-6-7q5-6 9 0" fill="none" stroke="#c6ac91" stroke-width="1.3" opacity=".65"/></g></g>`;
+  };
+  const daisy = (x, y, size, delay) => {
+    let petals = '';
+    for (let p=0;p<15;p++) petals += `<ellipse cx="0" cy="${-size * .58}" rx="${size * .15}" ry="${size * .55}" transform="rotate(${p * 24})" fill="url(#bouquetIvory)"/>`;
+    return `<g transform="translate(${x} ${y})"><g class="bouquet-flower" style="--bloom-delay:${delay}s">${petals}<circle r="${size * .23}" fill="url(#bouquetGold)"/><circle r="${size * .16}" fill="none" stroke="#f9e8b4" stroke-width="1" stroke-dasharray="1 3"/></g></g>`;
+  };
+  const hydrangea = (x,y,delay) => {
+    let florets = '';
+    for (let i=0;i<15;i++) {
+      const angle=i*2.4, radius=Math.sqrt(i)*10;
+      const cx=Math.cos(angle)*radius, cy=Math.sin(angle)*radius;
+      florets += `<g transform="translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${i*27})">${[0,90,180,270].map(a=>`<ellipse cy="-6" rx="5.8" ry="8" transform="rotate(${a})" fill="url(#bouquetBlue)" stroke="#bfd6eb" stroke-width=".4"/>`).join('')}<circle r="1.6" fill="#f2ecd0"/></g>`;
     }
-    const centre = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); centre.setAttribute('r', String(size * .22)); centre.setAttribute('fill', '#d7b677'); petals.append(centre); flower.append(petals); svg.append(flower);
+    return `<g transform="translate(${x} ${y})"><g class="bouquet-flower" style="--bloom-delay:${delay}s">${florets}</g></g>`;
+  };
+  let foliage = '';
+  [[133,248,-35],[352,260,35],[198,150,-19],[302,156,18]].forEach(([x,y,angle])=>{
+    foliage += `<g transform="translate(${x} ${y}) rotate(${angle})"><path d="M0 130Q8 44 0-40" fill="none" stroke="#648f7b" stroke-width="2.5"/>`;
+    for(let i=0;i<5;i++) foliage += `<ellipse cx="${i%2?13:-12}" cy="${i*26-27}" rx="12" ry="20" transform="rotate(${i%2?48:-48} ${i%2?13:-12} ${i*26-27})" fill="url(#bouquetLeaf)"/>`;
+    foliage += '</g>';
   });
+  garden.innerHTML = `<svg class="coral-bouquet botanical-bouquet" viewBox="0 0 500 610" aria-hidden="true">
+    <defs>
+      <radialGradient id="bouquetIvory" cx="35%" cy="25%" r="80%"><stop stop-color="#fffef5"/><stop offset=".6" stop-color="#f5eee1"/><stop offset="1" stop-color="#d7cbb7"/></radialGradient>
+      <radialGradient id="bouquetBlush" cx="30%" cy="25%" r="80%"><stop stop-color="#fff1e6"/><stop offset=".62" stop-color="#eecdbf"/><stop offset="1" stop-color="#c99a8d"/></radialGradient>
+      <radialGradient id="bouquetBlue" cx="30%" cy="20%" r="85%"><stop stop-color="#e3effc"/><stop offset=".6" stop-color="#a8c4e0"/><stop offset="1" stop-color="#718fba"/></radialGradient>
+      <radialGradient id="bouquetGold"><stop stop-color="#ead5a0"/><stop offset="1" stop-color="#b49657"/></radialGradient>
+      <linearGradient id="bouquetLeaf" x2="1" y2="1"><stop stop-color="#9bbcad"/><stop offset="1" stop-color="#4f8879"/></linearGradient>
+      <linearGradient id="bouquetWrap" x1="0" y1="0" x2="1" y2=".7"><stop stop-color="#fff9ed"/><stop offset=".5" stop-color="#e9e2d3"/><stop offset="1" stop-color="#c9d8d5"/></linearGradient>
+      <linearGradient id="bouquetFold" x2="1" y2="0"><stop stop-color="#89b7bd"/><stop offset=".52" stop-color="#cae4e5"/><stop offset="1" stop-color="#a0c8cc"/></linearGradient>
+      <linearGradient id="bouquetSatin" x2="0" y2="1"><stop stop-color="#dfeff0"/><stop offset=".45" stop-color="#77a7b5"/><stop offset=".62" stop-color="#bad8df"/><stop offset="1" stop-color="#4b7f95"/></linearGradient>
+    </defs>
+    <path d="M105 285 65 234 79 387 222 550 300 540 423 365 406 227 358 291Z" fill="url(#bouquetWrap)" stroke="#f9f5ea" stroke-opacity=".5"/>
+    <g class="bouquet-stems" fill="none" stroke="#688d77" stroke-width="3" stroke-linecap="round"><path d="M255 502Q204 326 151 207M255 502Q232 319 224 144M255 502Q280 301 315 187M255 502Q318 342 357 278M255 502Q195 329 143 302M255 502Q257 342 270 261"/></g>
+    <g class="botanical-foliage">${foliage}<path d="M197 361q-72-15-92-73 71-7 92 73M292 361q72-15 96-74-75-8-96 74" fill="url(#bouquetLeaf)"/></g>
+    ${hydrangea(149,254,.45)}${hydrangea(339,263,.6)}
+    ${flower(218,164,42,'bouquetIvory',.28)}${flower(307,199,40,'bouquetBlush',.48)}${flower(158,197,34,'bouquetIvory',.38)}${flower(252,270,47,'bouquetIvory',.65)}
+    ${daisy(194,304,23,.7)}${daisy(347,204,22,.55)}${daisy(267,128,18,.35)}
+    <g fill="#eee8d4" stroke="#d3dbc8" stroke-width="1"><ellipse cx="119" cy="166" rx="7" ry="11" transform="rotate(-25 119 166)"/><ellipse cx="367" cy="245" rx="7" ry="11" transform="rotate(28 367 245)"/></g>
+    <g class="bouquet-paper"><path d="M79 327Q154 353 271 475L227 557Q137 450 79 327Z" fill="url(#bouquetWrap)"/><path d="M415 319Q352 352 239 480L290 552Q370 433 415 319Z" fill="url(#bouquetFold)"/><path d="M79 327 227 557 254 495Q157 386 79 327Z" fill="#fffaf0" opacity=".33"/><path d="M415 319Q350 413 254 495" fill="none" stroke="#e3f0ec" stroke-width="1.5" opacity=".7"/><path d="m227 557 23-62 40 57" fill="none" stroke="#7ba1a5" stroke-opacity=".4"/></g>
+    <g class="bouquet-tie"><path d="M251 488q-55-37-64-16-6 24 64 22m0-6q48-42 59-22 12 24-57 29" fill="url(#bouquetSatin)" stroke="#8ab4c0" stroke-width="1.4"/><path d="M246 492q-22 33-22 70l16-11 10 9 4-65M255 492q24 29 35 57l-17-6-8 13-16-60" fill="url(#bouquetSatin)"/><ellipse cx="252" cy="490" rx="10" ry="8" fill="url(#bouquetSatin)"/></g>
+  </svg>`;
   const portrait = document.createElement('figure'); portrait.className = 'finale-portrait';
   const image = document.createElement('img');
   const lastHero = window.HA_HERO_PHOTOS?.[2];
