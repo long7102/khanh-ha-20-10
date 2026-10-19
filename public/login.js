@@ -95,7 +95,7 @@ form.addEventListener('submit', async (event) => {
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;
-    submit.innerHTML = 'Mở cuốn scrapbook <span aria-hidden="true">↗</span>';
+    submit.innerHTML = 'Mở ra bất ngờ tiếp theo <span aria-hidden="true">↗</span>';
   }
 });
 
