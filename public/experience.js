@@ -28,7 +28,7 @@ document.querySelectorAll('.album-grid .photo-card').forEach((card, index) => {
   while (card.firstChild) front.append(card.firstChild);
   const back = document.createElement('span'); back.className = 'polaroid-back-face';
   back.setAttribute('aria-hidden', 'true');
-  const label = document.createElement('span'); label.className = 'polaroid-back-label'; label.textContent = 'MỘT LỜI NHẮN · 20/10';
+  const label = document.createElement('span'); label.className = 'polaroid-back-label'; label.textContent = 'MỘT LỜI NHẮN NHỦ DÀNH RIÊNG CHO EM· 20/10';
   const title = document.createElement('strong'); title.textContent = message.title;
   const body = document.createElement('span'); body.className = 'polaroid-back-message'; body.textContent = message.message;
   const hint = document.createElement('small'); hint.textContent = 'CHẠM ĐỂ TRỞ LẠI ↻';
@@ -42,7 +42,7 @@ const bookSection = document.createElement('section');
 bookSection.className = 'book-section';
 bookSection.innerHTML = `<div class="book-heading"><span class="eyebrow">27 PORTRAITS · A BOOK FOR HẠ</span><h3>Mỗi trang, <em>một phiên bản rạng rỡ.</em></h3><p>Từ tóc ngắn đến tóc dài. Cuốn sách tự lật, em chỉ cần ngắm nhìn.</p></div><div class="memory-book" tabindex="0" aria-label="Album tự lật trang, phím mũi tên để đổi trang"><div class="book-page book-left"></div><div class="book-page book-right"></div><div class="book-spine" aria-hidden="true"></div></div><div class="book-toolbar"><span class="book-status"></span><button class="book-pause" type="button">Tạm dừng lật Ⅱ</button><button class="book-next" type="button" aria-label="Lật trang tiếp theo">Lật trang ↗</button></div><p class="book-hint">Chạm vào ảnh để rút ra khỏi trang sách và ngắm thật gần.</p>`;
 album.querySelector('.album-grid').after(bookSection);
-album.querySelector('.placeholder-note').textContent = 'Một cuốn sách nhỏ, dành cho cô gái có thật nhiều điều đáng yêu.';
+album.querySelector('.placeholder-note').textContent = 'Một cuốn sách nhỏ chưa đựng nhiều điều đáng yêu.';
 const book = bookSection.querySelector('.memory-book');
 const leftPage = book.querySelector('.book-left');
 const rightPage = book.querySelector('.book-right');
@@ -68,7 +68,7 @@ const warmSpread = start => Promise.all([warmPhoto(start), warmPhoto(start + 1)]
 function fillPage(page, number) {
   page.replaceChildren();
   if (number > 27) {
-    page.innerHTML = '<div class="book-dedication"><span>✿</span><h3>20 tháng 10</h3><p>Chúc Hạ luôn hạnh phúc,<br>tự do và rạng rỡ.</p><small>WITH LOVE, ALWAYS</small></div>';
+    page.innerHTML = '<div class="book-dedication"><span>✿</span><h3>20 tháng 10</h3><p>Khánh Hạ luôn hạnh phúc,<br>tự do và rạng rỡ (không phải chúc).</p><small>WITH HEIGHT, ALWAYS</small></div>';
     return;
   }
   const button = document.createElement('button');

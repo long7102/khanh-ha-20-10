@@ -18,7 +18,7 @@ function syncSoundtrack() {
   document.body.classList.toggle('music-playing', playing);
   document.querySelector('#record').classList.toggle('playing', playing);
   document.querySelector('#music-toggle').setAttribute('aria-pressed', String(playing));
-  document.querySelector('#music-toggle').setAttribute('aria-label', playing ? 'Tạm dừng nhạc nền piano' : 'Bật nhạc nền piano');
+  document.querySelector('#music-toggle').setAttribute('aria-label', playing ? 'Tạm dừng nhạc nền' : 'Bật nhạc nền');
   document.querySelector('#music-card-toggle').setAttribute('aria-pressed', String(playing));
   document.querySelector('#music-label').textContent = playing ? 'Tạm dừng nhạc' : 'Bật nhạc';
   document.querySelector('#music-card-label').textContent = playing ? 'Tạm dừng' : 'Bật nhạc';
@@ -45,7 +45,7 @@ soundtrack.addEventListener('loadedmetadata', updateTrackProgress);
 seek.addEventListener('input', () => { if (Number.isFinite(soundtrack.duration)) soundtrack.currentTime = Number(seek.value) / 100 * soundtrack.duration; });
 volume.addEventListener('input', () => { soundtrack.volume = Number(volume.value); });
 if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
-  navigator.mediaSession.metadata = new MediaMetadata({ title: 'Một bài nhạc dành riêng cho em', artist: 'Dành cho Khánh Hạ', album: 'Một miền biển dành cho Hạ · 20/10' });
+  navigator.mediaSession.metadata = new MediaMetadata({ title: 'Một bài nhạc dành riêng cho em', artist: 'Dành cho Khánh Hạ', album: 'Đại dương cho người lùn bơi· 20/10' });
   navigator.mediaSession.setActionHandler('play', () => soundtrack.play().catch(() => {}));
   navigator.mediaSession.setActionHandler('pause', () => soundtrack.pause());
 }
