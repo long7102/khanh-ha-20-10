@@ -2,6 +2,7 @@
 :root{--sea-depth:0;--sea-lightness:96%;--reading-ink:#123849;--reading-muted:#31586a;--reading-accent:#28738c}
 html[data-sea-ink=light]{--reading-ink:#e3f4f7;--reading-muted:#c4e0e9;--reading-accent:#9ed9e4}
 .site-body .site-header{color:#153d50}[data-theme=dark] .site-body .site-header{color:#e3f4f7}.site-body main>section,#ocean-finale,.book-section{scroll-margin-top:96px}
+.site-body .outline-btn{color:#285e72;background:#fffaf0;border-color:#9fc7de}
 .site-body{background:hsl(198 55% var(--sea-lightness));color:var(--reading-ink);transition:color .4s}
 .site-body main{position:relative;z-index:2}.site-body main>section{position:relative;background:transparent!important;isolation:isolate}
 .site-body main>section:not(:first-child):before{content:'';position:absolute;left:0;right:0;top:0;height:56px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#88c7d21a,transparent);clip-path:polygon(0 25%,5% 20%,10% 27%,15% 40%,20% 48%,25% 46%,30% 31%,35% 20%,40% 18%,45% 31%,50% 44%,55% 49%,60% 43%,65% 30%,70% 18%,75% 20%,80% 32%,85% 44%,90% 48%,95% 37%,100% 23%,100% 100%,0 100%)}
