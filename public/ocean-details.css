@@ -26,3 +26,24 @@
 @media(max-width:760px){.device-invitation{font-size:11px;margin:12px 0 22px;padding:10px 12px}.device-invitation>span{float:none;display:block;margin:0}.tonearm{right:-1%}.music-icon-field span{font-size:calc(var(--icon-size) * .8)}}
 @media(hover:none),(pointer:coarse){.pointer-light,.cursor-school{display:none}}
 @media(prefers-reduced-motion:reduce){.music-icon-field span{animation:none}.tonearm,.arm-cartridge,.journey-card{transition:none!important}.pointer-light,.cursor-school{display:none}}
+/* Upright pin: cap and barrel above the sheet, metal point entering the paper. */
+.letter-paper .paper-pin{top:-34px;left:50%;width:28px;height:43px;border:0;border-radius:0;background:none;box-shadow:none;transform:translateX(-50%);filter:drop-shadow(6px 8px 3px #18374745)}
+.letter-paper .paper-pin:before{width:8px;height:3px;top:41px;left:10px;clip-path:none;border-radius:50%;background:#17374a8c;filter:none;z-index:0}
+.letter-paper .paper-pin:after{width:26px;height:8px;top:36px;left:12px;border-radius:50%;background:#1d3b4d20;box-shadow:5px 3px 6px #1d3b4d35;z-index:-1;transform:rotate(25deg)}
+.paper-pin i{display:block;position:absolute}.pin-needle{left:12px;top:21px;width:4px;height:22px;background:linear-gradient(90deg,#45616c,#edf6f9 50%,#6d8d9c);clip-path:polygon(0 0,100% 0,75% 85%,50% 100%,25% 85%)}
+.pin-body{left:7px;top:5px;width:14px;height:22px;background:linear-gradient(90deg,#236984,#a3e8f5 35%,#4ba2bf 62%,#1a526d);clip-path:polygon(7% 0,93% 0,80% 65%,100% 100%,0 100%,20% 65%)}
+.pin-cap{left:1px;top:0;width:26px;height:10px;border-radius:50%;background:radial-gradient(ellipse at 35% 26%,#e9fcff,#84cee5 35%,#246d8d 85%);border:1px solid #3e829b;box-shadow:0 2px 2px #143e5b66}
+.pin-base{left:4px;top:23px;width:20px;height:7px;border-radius:50%;background:linear-gradient(#93d9e9,#266f8b);border-bottom:1px solid #1e5670}
+/* Mirror the pickup assembly onto the left of the platter. */
+.tonearm{right:auto!important;left:-3%;transform-origin:18% 12%;transform:scaleX(-1) rotate(-31deg)}
+.music-playing .tonearm{transform:scaleX(-1) rotate(10deg)}
+.following-fish{opacity:.36}.following-fish:nth-child(2){opacity:.28}.following-fish:nth-child(3){opacity:.22}
+/* A one-time, dismissible notice, separate from the page layout. */
+.device-invitation{position:fixed;left:24px;bottom:24px;z-index:70;display:flex;align-items:center;gap:12px;width:min(380px,calc(100vw - 32px));max-width:none;margin:0;padding:16px 40px 16px 17px;border-radius:18px;border:1px solid #d5f3ff77;background:#103b51d9;color:#edfaff;box-shadow:0 12px 36px #092c4440;backdrop-filter:blur(18px);text-align:left;animation:deviceNoteIn .55s ease both;transition:opacity .4s,translate .4s}
+.device-invitation p{margin:0;font-size:12px;line-height:1.75}.device-invitation>span{float:none;flex-shrink:0;color:#b5eaff;margin:0;font-size:23px}.device-invitation button{position:absolute;right:3px;top:3px;width:38px;height:38px;background:none;border:0;color:#e3f8ff;font-size:24px;cursor:pointer}.device-invitation.is-leaving{opacity:0;translate:0 12px;pointer-events:none}
+@keyframes deviceNoteIn{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
+@media(max-width:760px){.tonearm{left:-1%}.device-invitation{left:16px;bottom:18px;padding:14px 38px 14px 14px}.device-invitation>span{display:inline-block}.device-invitation p{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.device-invitation{animation:none;transition:none}}
+/* Keep the left pivot fixed while the arm itself swings inward. */
+.tonearm{transform:rotate(31deg)}.music-playing .tonearm{transform:rotate(-10deg)}
+.tonearm .arm-pivot{left:5%}.tonearm .arm-stem{left:17%;transform:rotate(-19deg)}.tonearm .arm-cartridge{left:46%;transform:rotate(-19deg) translateY(-5px)}.music-playing .tonearm .arm-cartridge{transform:rotate(-19deg) translateY(0)}

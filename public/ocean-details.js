@@ -1,9 +1,32 @@
 // Small finishing touches; scenery never captures a click or a swipe.
 (() => {
-  const note = document.createElement('p');
-  note.className = 'device-invitation';
-  note.innerHTML = '<span aria-hidden="true">▯ &nbsp;▱</span> Mỗi màn hình có một điều dễ thương riêng.<br>Em thử trải nghiệm cả trên điện thoại và máy tính nhé ♡';
-  document.querySelector('.hero-footer')?.before(note);
+  const noticeKey = 'ha-device-note-seen-v1';
+  let noticeSeen = false;
+  try { noticeSeen = localStorage.getItem(noticeKey) === '1'; } catch {}
+  if (!noticeSeen) {
+    const intro = document.querySelector('#intro');
+    const showNotice = () => {
+      if (noticeSeen) return;
+      noticeSeen = true;
+      try { localStorage.setItem(noticeKey, '1'); } catch {}
+      const note = document.createElement('aside');
+      note.className = 'device-invitation'; note.setAttribute('role', 'status');
+      note.innerHTML = '<span aria-hidden="true">▯ &nbsp;▱</span><p>Mỗi màn hình có một điều dễ thương riêng.<br>Em thử cả điện thoại và máy tính nhé ♡</p><button type="button" aria-label="Đóng thông báo trải nghiệm">×</button>';
+      document.body.append(note);
+      let closing = false;
+      const dismiss = () => { if (closing) return; closing = true; clearTimeout(timer); note.classList.add('is-leaving'); setTimeout(() => note.remove(), 450); };
+      const timer = setTimeout(dismiss, 9000);
+      note.querySelector('button').addEventListener('click', dismiss);
+    };
+    if (intro) {
+      const noticeObserver = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) { showNotice(); noticeObserver.disconnect(); }
+      }, { threshold: .35 });
+      noticeObserver.observe(intro);
+    }
+  }
+  const pin = document.querySelector('.letter-paper .paper-pin');
+  if (pin) pin.innerHTML = '<i class="pin-needle"></i><i class="pin-body"></i><i class="pin-base"></i><i class="pin-cap"></i>';
 
   const record = document.querySelector('.record-wrap');
   if (record) {
@@ -53,15 +76,19 @@
     if (!pointerOn || document.hidden || !pointerAllowed.matches) { frame = 0; previous = 0; return; }
     const dt = previous ? Math.min(40, now - previous) : 16; previous = now;
     fish.forEach((f, i) => {
-      const phase = now * .00055 + i * 2.1;
+      const phase = now * .00022 + i * 2.1;
       const x = Math.max(20, Math.min(innerWidth - 65, targetX + Math.cos(phase) * (95 + i * 22)));
       const y = Math.max(20, Math.min(innerHeight - 40, targetY + Math.sin(phase) * (60 + i * 18)));
       const dx = x - f.x, dy = y - f.y;
-      f.x += dx * (1 - Math.exp(-dt / (850 + i * 240)));
-      f.y += dy * (1 - Math.exp(-dt / (850 + i * 240)));
+      // A very slow current: even a large pointer jump cannot make fish dart.
+      const easing = 1 - Math.exp(-dt / (5500 + i * 1400));
+      const travel = Math.hypot(dx, dy) * easing;
+      const step = Math.min(easing, (.012 - i * .0015) * dt / (Math.hypot(dx, dy) || 1));
+      f.x += dx * step;
+      f.y += dy * step;
       const facing = Math.atan2(dy, dx) * 180 / Math.PI;
       let delta = ((facing - f.angle + 540) % 360) - 180;
-      f.angle += delta * (1 - Math.exp(-dt / 300));
+      if (travel > .005) f.angle += delta * (1 - Math.exp(-dt / 1800));
       f.node.style.transform = `translate3d(${f.x}px,${f.y}px,0) rotate(${f.angle}deg)`;
     });
     frame = requestAnimationFrame(swim);
