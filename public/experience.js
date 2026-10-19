@@ -52,6 +52,9 @@ let turning = false;
 let bookOnScreen = false;
 let bookPaused = !motionOkay();
 let photoOpen = false;
+let swipeStart = null;
+let suppressPhotoClickUntil = 0;
+let lastManualTurn = 0;
 const decodedPages = new Map();
 function warmPhoto(number) {
   if (number > 27) return Promise.resolve();
@@ -130,9 +133,34 @@ book.addEventListener('keydown', event => {
     event.preventDefault(); turnBook(event.key === 'ArrowLeft' ? -1 : 1);
   }
 });
+// Horizontal swipes turn the book; vertical gestures still scroll the page.
+book.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || turning || photoOpen || event.button > 0) return;
+  swipeStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+});
+book.addEventListener('pointermove', event => {
+  if (!swipeStart || event.pointerId !== swipeStart.id) return;
+  const dx = event.clientX - swipeStart.x, dy = event.clientY - swipeStart.y;
+  if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    book.classList.add('swiping');
+    book.setPointerCapture(event.pointerId);
+  }
+});
+book.addEventListener('pointerup', event => {
+  if (!swipeStart || event.pointerId !== swipeStart.id) return;
+  const dx = event.clientX - swipeStart.x, dy = event.clientY - swipeStart.y;
+  swipeStart = null; book.classList.remove('swiping');
+  if (book.hasPointerCapture(event.pointerId)) book.releasePointerCapture(event.pointerId);
+  if (Math.abs(dx) >= 42 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+    suppressPhotoClickUntil = Date.now() + 600;
+    lastManualTurn = Date.now(); turnBook(dx < 0 ? 1 : -1);
+  }
+});
+book.addEventListener('pointercancel', () => { swipeStart = null; book.classList.remove('swiping'); });
+book.addEventListener('dragstart', event => event.preventDefault());
 new IntersectionObserver(entries => { bookOnScreen = entries[0].isIntersecting; }, { threshold: .25 }).observe(book);
 setInterval(() => {
-  if (bookOnScreen && !bookPaused && !document.hidden && motionOkay()) turnBook();
+  if (bookOnScreen && !bookPaused && !document.hidden && motionOkay() && Date.now() - lastManualTurn > 6500) turnBook();
 }, 5200);
 reducedMotion.addEventListener('change', () => { if (!motionOkay()) { bookPaused = true; syncBookPause(); } });
 paintBook(); syncBookPause();
@@ -200,17 +228,26 @@ async function openPortrait(button) {
 async function closePortrait() {
   if (!photoOpen || closingPhoto) return;
   closingPhoto = true;
-  // Finish the lift before returning, avoiding a jump from an intermediate pose.
-  await liftAnimation?.finished.catch(() => {});
-  liftAnimation?.cancel();
   if (motionOkay() && sourcePhoto?.isConnected) {
+    // A small decoded proxy avoids resampling the full-resolution image on return.
     const target = sourcePhoto.getBoundingClientRect();
     const from = viewerImage.getBoundingClientRect();
-    await viewerImage.animate([{ transform: 'none', opacity: 1 }, { transform: photoTransform(target, from), opacity: 1 }], { duration: 760, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }).finished.catch(() => {});
+    const proxy = sourcePhoto.cloneNode(); proxy.className = 'returning-photo'; proxy.alt = '';
+    proxy.setAttribute('aria-hidden', 'true');
+    proxy.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+    viewer.append(proxy);
+    await proxy.decode().catch(() => {});
+    viewerImage.style.visibility = 'hidden'; liftAnimation?.cancel();
+    viewer.classList.add('returning');
+    await proxy.animate([{ transform: 'translate3d(0,0,0) scale(1)' }, { transform: photoTransform(target, from) }], { duration: 850, easing: 'cubic-bezier(.22,.7,.25,1)', fill: 'forwards' }).finished.catch(() => {});
+    sourcePhoto.style.visibility = '';
+    sourceButton?.classList.remove('page-torn');
+    proxy.remove();
   }
   if (sourcePhoto) sourcePhoto.style.visibility = '';
   sourceButton?.classList.remove('page-torn');
   viewer.close();
+  viewer.classList.remove('returning'); viewerImage.style.visibility = '';
   viewerImage.getAnimations().forEach(animation => animation.cancel());
   document.body.style.overflow = previousOverflow;
   sourceButton?.focus({ preventScroll: true });
@@ -220,6 +257,7 @@ async function closePortrait() {
 album.addEventListener('click', event => {
   const button = event.target.closest('[data-photo]');
   if (!button) return;
+  if (Date.now() < suppressPhotoClickUntil) { event.preventDefault(); return; }
   if (button.classList.contains('photo-card')) {
     const flipped = button.classList.toggle('is-flipped');
     button.setAttribute('aria-pressed', String(flipped));
@@ -283,4 +321,3 @@ const letterObserver = new IntersectionObserver(entries => {
   if (entries.some(entry => entry.isIntersecting)) { mainWriter.write(); letterObserver.disconnect(); }
 }, { threshold: .16 });
 letterObserver.observe(mainLetter);
-

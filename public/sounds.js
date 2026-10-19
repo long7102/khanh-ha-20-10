@@ -1,6 +1,6 @@
 // Small synthesized paper sounds, created only after a deliberate interaction.
 (() => {
-  let context, noise, muted = false;
+  let context, noise;
   const active = new Set();
   const unlock = () => {
     try {
@@ -26,19 +26,15 @@
   window.HA_SFX = {
     unlock, stop,
     shuffle(duration) {
-      if (muted || !unlock()) return;
+      if (!unlock()) return;
       const now = context.currentTime;
       for (let time = 0; time < duration; time += .085) rustle(now + time, .095, .065 + Math.random() * .025, 2100 + Math.random() * 1900);
     },
     paper() {
-      if (muted || !unlock()) return;
+      if (!unlock()) return;
       const now = context.currentTime;
       for (let i = 0; i < 12; i++) rustle(now + i * .055, .11 + Math.random() * .06, .045 + Math.random() * .05, 900 + Math.random() * 2400);
     }
   };
-  const toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'effects-toggle';
-  function sync() { toggle.textContent = muted ? 'Bật tiếng giấy' : 'Tiếng giấy'; toggle.setAttribute('aria-pressed', String(muted)); toggle.setAttribute('aria-label', muted ? 'Bật âm thanh hiệu ứng giấy' : 'Tắt âm thanh hiệu ứng giấy'); }
-  toggle.addEventListener('click', () => { muted = !muted; if (muted) stop(); else unlock(); sync(); });
-  document.querySelector('.header-actions').prepend(toggle); sync();
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 })();

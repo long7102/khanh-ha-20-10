@@ -1,6 +1,20 @@
 const form = document.querySelector('#login-form');
 const error = document.querySelector('#login-error');
 const submit = form.querySelector('[type="submit"]');
+const loginPanel = document.querySelector('.login-panel');
+const backgroundToggle = document.createElement('button');
+backgroundToggle.type = 'button'; backgroundToggle.className = 'background-toggle';
+backgroundToggle.textContent = 'Ẩn form · Ngắm đại dương';
+backgroundToggle.setAttribute('aria-expanded', 'true');
+loginPanel.id = 'login-panel'; backgroundToggle.setAttribute('aria-controls', 'login-panel');
+document.body.append(backgroundToggle);
+backgroundToggle.addEventListener('click', () => {
+  const hidden = loginPanel.classList.toggle('is-hidden');
+  loginPanel.inert = hidden;
+  loginPanel.setAttribute('aria-hidden', String(hidden));
+  backgroundToggle.setAttribute('aria-expanded', String(!hidden));
+  backgroundToggle.textContent = hidden ? 'Hiện form đăng nhập' : 'Ẩn form · Ngắm đại dương';
+});
 
 document.querySelector('#toggle-password').addEventListener('click', (event) => {
   const field = document.querySelector('#password');
@@ -28,7 +42,7 @@ form.addEventListener('submit', async (event) => {
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
     sessionStorage.setItem('ha-access', config.hash);
-    window.location.replace('./scrapbook.html?v=12');
+    window.location.replace('./scrapbook.html?v=13');
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;
