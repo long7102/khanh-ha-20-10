@@ -69,6 +69,7 @@ async function foldGiftLetter() {
   if (motionOkay()) {
     const bounds = fountainLetter.getBoundingClientRect();
     const folded = document.createElement('div'); folded.className = 'letter-fold';
+    folded.setAttribute('aria-hidden', 'true');
     folded.style.cssText = `left:${bounds.left}px;top:${bounds.top}px;width:${bounds.width}px;height:${bounds.height}px`;
     for (let i = 0; i < 3; i++) {
       const strip = document.createElement('div'); strip.className = 'fold-strip';
