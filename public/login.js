@@ -8,6 +8,45 @@ backgroundToggle.textContent = 'Ẩn form · Ngắm đại dương';
 backgroundToggle.setAttribute('aria-expanded', 'true');
 loginPanel.id = 'login-panel'; backgroundToggle.setAttribute('aria-controls', 'login-panel');
 document.body.append(backgroundToggle);
+const release = window.HA_RELEASE;
+let verifiedForRelease = false;
+let enteringScrapbook = false;
+const releaseNote = document.createElement('div'); releaseNote.className = 'release-note';
+releaseNote.innerHTML = '<strong>Món quà mở lúc 00:00 · 20/10/2026</strong><span class="release-countdown" aria-hidden="true"></span><span>Giờ Việt Nam · Em có thể đăng nhập trước để chờ mở quà.</span><span class="release-status" role="status"></span>';
+form.before(releaseNote);
+async function enterScrapbook() {
+  if (enteringScrapbook || !verifiedForRelease || !release.isOpen()) return;
+  enteringScrapbook = true;
+  sessionStorage.setItem('ha-access', window.SCRAPBOOK_ACCESS.hash);
+  submit.textContent = 'Chúc mừng 20/10, Hạ ơi ♡';
+  releaseNote.querySelector('.release-status').textContent = 'Đến giờ rồi, cùng mở món quà nhé.';
+  loginPanel.inert = true; backgroundToggle.disabled = true;
+  document.body.classList.add('entering');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 760));
+  window.location.replace('./scrapbook.html?v=14');
+}
+function updateRelease() {
+  const open = release.isOpen();
+  releaseNote.hidden = open && !verifiedForRelease;
+  if (!open) releaseNote.querySelector('.release-countdown').textContent = release.countdown();
+  if (open && verifiedForRelease) enterScrapbook();
+}
+// Align the final tick with the release boundary rather than waiting a full second.
+function scheduleReleaseTick() {
+  updateRelease();
+  if (!release.isOpen() && !enteringScrapbook) setTimeout(scheduleReleaseTick, Math.min(1000, Math.max(10, release.remaining())));
+}
+scheduleReleaseTick();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) updateRelease(); });
+window.addEventListener('pageshow', updateRelease);
+form.addEventListener('input', () => {
+  if (!verifiedForRelease || enteringScrapbook) return;
+  verifiedForRelease = false; submit.disabled = false;
+  loginPanel.classList.remove('waiting');
+  submit.textContent = 'Mở cuốn scrapbook ↗';
+  releaseNote.querySelector('.release-status').textContent = '';
+});
 backgroundToggle.addEventListener('click', () => {
   const hidden = loginPanel.classList.toggle('is-hidden');
   loginPanel.inert = hidden;
@@ -26,6 +65,7 @@ document.querySelector('#toggle-password').addEventListener('click', (event) => 
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (enteringScrapbook || verifiedForRelease) return;
   error.textContent = '';
   const username = form.elements.namedItem('username').value.trim();
   const password = form.elements.namedItem('password').value;
@@ -41,8 +81,14 @@ form.addEventListener('submit', async (event) => {
     const digest = await crypto.subtle.digest('SHA-256', bytes);
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (hash !== config.hash) throw new Error('Chưa đúng rồi, em thử lại nhé.');
-    sessionStorage.setItem('ha-access', config.hash);
-    window.location.replace('./scrapbook.html?v=13');
+    verifiedForRelease = true;
+    if (release.isOpen()) enterScrapbook();
+    else {
+      loginPanel.classList.add('waiting');
+      submit.textContent = 'Đã sẵn sàng · Chờ 00:00 ♡';
+      releaseNote.querySelector('.release-status').textContent = 'Thông tin đã đúng. Em cứ để trang này mở, món quà sẽ tự mở khi đến giờ nhé.';
+      updateRelease();
+    }
   } catch (reason) {
     error.textContent = reason.message || 'Có lỗi kết nối. Thử lại nhé.';
     submit.disabled = false;

@@ -12,7 +12,8 @@ letterStage.append(closeLetter, fountainLetter); document.body.append(letterStag
 const rereadLetter = document.createElement('button');
 rereadLetter.type = 'button'; rereadLetter.className = 'outline-btn reread-letter'; rereadLetter.textContent = 'Đọc lại lá thư ♡'; rereadLetter.hidden = true;
 fountainButton.after(rereadLetter);
-let giftHasOpened = sessionStorage.getItem('ha-gift-opened') === 'yes';
+// One fountain per page load; refreshing creates a fresh gift.
+let giftHasOpened = false;
 let fountainBusy = false;
 let letterOverflow = '';
 let preparedGiftPhotos;
@@ -100,7 +101,7 @@ rereadLetter.addEventListener('click', () => revealGiftLetter(false));
 if (giftHasOpened) markGiftOpened();
 fountainButton.addEventListener('click', async () => {
   if (fountainBusy || giftHasOpened) return;
-  fountainBusy = true; giftHasOpened = true; sessionStorage.setItem('ha-gift-opened', 'yes');
+  fountainBusy = true; giftHasOpened = true;
   window.HA_SFX?.unlock();
   fountainButton.disabled = true;
   fountainButton.querySelector('.gift-tap').textContent = 'ĐANG CHUẨN BỊ BẤT NGỜ…';

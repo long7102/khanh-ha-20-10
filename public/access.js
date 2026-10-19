@@ -4,7 +4,7 @@ window.SCRAPBOOK_ACCESS = {
   hash: '4ce93aacc9242e4476491883f2d9e558edb9f4e28c2ce48901ef823f099aefa3'
 };
 if (document.documentElement.dataset.page === 'scrapbook' &&
-    sessionStorage.getItem('ha-access') !== window.SCRAPBOOK_ACCESS.hash) {
-  window.location.replace('./index.html');
+    (!window.HA_RELEASE?.isOpen() || sessionStorage.getItem('ha-access') !== window.SCRAPBOOK_ACCESS.hash)) {
+  document.documentElement.style.visibility = 'hidden';
+  window.location.replace('./index.html?v=14');
 }
-

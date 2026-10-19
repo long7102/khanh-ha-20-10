@@ -22,5 +22,6 @@ Sửa trực tiếp HTML, CSS hoặc JavaScript rồi commit. Nhạc piano đư�
 Nếu đổi thông tin đăng nhập, cập nhật hash SHA-256 của chuỗi `username:password:salt` trong `public/access.js`.
 `public/memories.js`: sửa title/paragraph của 27 ảnh và lời nhắn mặt lưng của 4 polaroid. Album sách tự lật khi ở trong màn hình; ảnh có thể rút ra toàn màn hình và trả về trang cũ. Hiệu ứng hỗ trợ prefers-reduced-motion.
 
-`public/gift.js`: quà phun ảnh một lần trong mỗi phiên tab, sau đó khóa hộp. Thư bay ra từ hộp vào cửa sổ đọc; nút riêng cho phép đọc lại thư mà không phun ảnh lần nữa. `public/ocean.css` định nghĩa sóng, tia nắng dưới nước, rong biển và trạng thái nền khi nhạc phát.
+`public/gift.js`: quà phun ảnh một lần trong mỗi lần tải trang (F5 để mở lại), sau đó khóa hộp. Thư bay ra từ hộp vào cửa sổ đọc; nút riêng cho phép đọc lại thư mà không phun ảnh lần nữa. `public/ocean.css` định nghĩa sóng, tia nắng dưới nước, rong biển và trạng thái nền khi nhạc phát.
 
+Giờ mở quà: 00:00 ngày 20/10/2026, UTC+07:00. `public/release.js` dùng một mốc giờ cố định; nhập đúng trước giờ sẽ chờ rồi tự chuyển sau khi form mờ đi. Kiểm tra cũng áp dụng khi mở trực tiếp `scrapbook.html`, kể cả phiên cũ. Đây là khóa trải nghiệm phía trình duyệt dựa trên đồng hồ thiết bị; website tĩnh công khai không thể giữ bí mật nội dung hoặc chống sửa đồng hồ/mã nguồn.

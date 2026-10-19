@@ -118,7 +118,8 @@ function dodgeLove(event) {
   event?.preventDefault();
   positionIndex = (positionIndex + 1) % positions.length;
   const [left, top] = positions[positionIndex];
-  loveChoice.style.left = `${left}%`;
+  const halfWidth = loveChoice.offsetWidth / 2;
+  loveChoice.style.left = `${Math.max(halfWidth + 6, Math.min(choiceStage.clientWidth - halfWidth - 6, choiceStage.clientWidth * left / 100))}px`;
   loveChoice.style.top = `${top}%`;
   instruction.textContent = ['Bắt được anh không? ♡', 'Nhanh tay lên nào, mini ơi!', 'Ô này cứ chạy mất thôi...', 'Hay thử ô còn lại nhỉ? ✦'][positionIndex % 4];
 }
