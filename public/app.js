@@ -26,33 +26,7 @@ document.querySelectorAll('.photo-card').forEach((card, index) => {
 });
 
 const album = document.querySelector('#album');
-const strip = document.createElement('div');
-strip.className = 'film-section reveal';
-strip.innerHTML = `<div class="film-heading"><div><span class="eyebrow">HAIR JOURNEY · 01—27</span><h3>Từ tóc ngắn đến tóc dài <em>♡</em></h3></div><div class="film-controls"><button type="button" id="film-prev" aria-label="Ảnh trước">←</button><button type="button" id="film-next" aria-label="Ảnh tiếp">→</button></div></div><div class="film-track" id="film-track" role="group" aria-label="Album ảnh sắp theo độ dài tóc"></div>`;
-album.querySelector('.album-grid').after(strip);
-const filmTrack = strip.querySelector('#film-track');
-for (let number = 1; number <= 27; number++) {
-  const card = document.createElement('button');
-  card.className = 'film-card';
-  card.type = 'button';
-  card.dataset.photo = String(number);
-  card.dataset.caption = `Ảnh ${String(number).padStart(2, '0')} / 27 · bộ ảnh xếp từ tóc ngắn đến tóc dài`;
-  const photo = document.createElement('span');
-  photo.className = 'film-photo';
-  photo.innerHTML = '<span aria-hidden="true">♡</span>';
-  attachPhoto(photo, number);
-  const caption = document.createElement('span');
-  caption.className = 'film-caption';
-  caption.textContent = `HẠ / ${String(number).padStart(2, '0')}`;
-  card.append(photo, caption);
-  filmTrack.append(card);
-}
-strip.querySelector('#film-prev').addEventListener('click', () => filmTrack.scrollBy({ left: -340, behavior: reducedMotion.matches ? 'instant' : 'smooth' }));
-strip.querySelector('#film-next').addEventListener('click', () => filmTrack.scrollBy({ left: 340, behavior: reducedMotion.matches ? 'instant' : 'smooth' }));
-const note = album.querySelector('.placeholder-note');
-note.textContent = '✎ Bộ ảnh đã được xếp từ tóc ngắn đến tóc dài. Chạm vào ảnh để xem lớn hơn.';
-
-const pieceSelectors = '.section-heading > *, .letter-paper > p, .journey-card > *, .music-copy > *, .counter-item, .surprise-inner > .eyebrow, .surprise-inner > h2, .surprise-inner > p, .closing-section > .eyebrow, .closing-section > h2, .closing-section > p, .film-card';
+const pieceSelectors = '.section-heading > *, .journey-card > *, .music-copy > *, .counter-item, .surprise-inner > .eyebrow, .surprise-inner > h2, .surprise-inner > p, .closing-section > .eyebrow, .closing-section > h2, .closing-section > p, .film-card';
 document.querySelectorAll(pieceSelectors).forEach((item, index) => {
   item.classList.add('scroll-piece');
   item.style.setProperty('--piece-delay', `${(index % 5) * 90}ms`);
@@ -74,20 +48,6 @@ document.querySelector('#logout').addEventListener('click', () => {
   sessionStorage.removeItem('ha-access');
   window.location.replace('./index.html');
 });
-
-const dialog = document.querySelector('#photo-dialog');
-const dialogPhoto = dialog.querySelector('.dialog-photo');
-album.addEventListener('click', event => {
-  const card = event.target.closest('[data-photo]');
-  if (!card) return;
-  dialogPhoto.querySelector('img')?.remove();
-  dialogPhoto.classList.remove('has-photo');
-  attachPhoto(dialogPhoto, Number(card.dataset.photo), true);
-  document.querySelector('#dialog-caption').textContent = card.dataset.caption;
-  dialog.showModal();
-});
-document.querySelector('#dialog-close').addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 
 const startDate = Date.UTC(2026, 2, 7, 0, 0, 0);
 function updateCounter() {
@@ -173,54 +133,6 @@ async function toggleMusic() {
 }
 document.querySelector('#music-toggle').addEventListener('click', toggleMusic);
 document.querySelector('#music-card-toggle').addEventListener('click', toggleMusic);
-
-const giftButton = document.querySelector('#gift-button');
-const giftMessage = document.querySelector('#gift-message');
-const giftBurst = document.querySelector('#gift-burst');
-document.body.append(giftBurst);
-let giftOpening = false;
-giftButton.addEventListener('click', async () => {
-  if (giftOpening) return;
-  giftOpening = true;
-  giftButton.disabled = true;
-  giftMessage.hidden = true;
-  giftButton.setAttribute('aria-expanded', 'false');
-  giftButton.querySelector('.gift-tap').textContent = 'ĐANG GOM KỶ NIỆM…';
-  if (!reducedMotion.matches) {
-    giftBurst.replaceChildren();
-    const giftRect = giftButton.getBoundingClientRect();
-    const photos = [];
-    for (let number = 1; number <= 27; number++) {
-      const image = document.createElement('img');
-      const angle = number * 137.508 * Math.PI / 180;
-      const radius = 10 + (number % 4) * 8;
-      image.src = photoPath(number);
-      image.alt = '';
-      image.decoding = 'async';
-      image.className = 'gift-burst-photo';
-      image.style.left = `${giftRect.left + giftRect.width / 2}px`;
-      image.style.top = `${giftRect.top + giftRect.height / 2}px`;
-      image.style.setProperty('--burst-x', `${Math.cos(angle) * radius}vw`);
-      image.style.setProperty('--burst-y', `${Math.sin(angle) * radius * .54}vh`);
-      image.style.setProperty('--burst-rotate', `${(number * 37) % 90 - 45}deg`);
-      image.style.setProperty('--burst-delay', `${(number % 9) * 45}ms`);
-      photos.push(image);
-    }
-    await Promise.all(photos.map(image => image.decode().catch(() => {})));
-    giftBurst.append(...photos);
-  }
-  giftButton.classList.add('open');
-  window.setTimeout(() => {
-    giftMessage.hidden = false;
-    giftButton.setAttribute('aria-expanded', 'true');
-    giftButton.disabled = false;
-    giftButton.querySelector('.gift-tap').textContent = 'MỞ LẠI KỶ NIỆM ↗';
-    giftOpening = false;
-    giftMessage.scrollIntoView({ behavior: reducedMotion.matches ? 'instant' : 'smooth', block: 'center' });
-    giftMessage.focus({ preventScroll: true });
-  }, reducedMotion.matches ? 0 : 2500);
-  window.setTimeout(() => giftBurst.replaceChildren(), reducedMotion.matches ? 0 : 2800);
-});
 
 const loveChoice = document.querySelector('#love-choice');
 const hateChoice = document.querySelector('#hate-choice');

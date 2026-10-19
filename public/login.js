@@ -36,21 +36,27 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-// All pictures drift softly behind the welcome panel.
+// Each row repeats its exact group for a seamless, slow infinite scroll.
 const floatingPhotos = document.createElement('div');
-floatingPhotos.className = 'login-floating-photos';
+floatingPhotos.className = 'login-photo-rows';
 floatingPhotos.setAttribute('aria-hidden', 'true');
-for (let number = 1; number <= 27; number++) {
-  const image = document.createElement('img');
-  image.src = `./public/media/photo-${String(number).padStart(2, '0')}.jpg`;
-  image.alt = '';
-  image.decoding = 'async';
-  image.style.setProperty('--photo-left', `${((number * 37) % 112) - 6}%`);
-  image.style.setProperty('--photo-top', `${((number * 23) % 102) - 5}%`);
-  image.style.setProperty('--photo-rotate', `${(number * 17) % 36 - 18}deg`);
-  image.style.setProperty('--photo-duration', `${18 + number % 8}s`);
-  image.style.setProperty('--photo-delay', `${-number * 1.3}s`);
-  floatingPhotos.append(image);
+for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+  const row = document.createElement('div');
+  row.className = 'login-photo-row';
+  for (let copy = 0; copy < 2; copy++) {
+    const group = document.createElement('div');
+    group.className = 'login-photo-group';
+    for (let offset = 1; offset <= 9; offset++) {
+      const image = document.createElement('img');
+      const number = rowIndex * 9 + offset;
+      image.src = `./public/media/photo-${String(number).padStart(2, '0')}.jpg`;
+      image.alt = '';
+      image.decoding = 'async';
+      group.append(image);
+    }
+    row.append(group);
+  }
+  floatingPhotos.append(row);
 }
 document.querySelector('.login-scene').prepend(floatingPhotos);
 
