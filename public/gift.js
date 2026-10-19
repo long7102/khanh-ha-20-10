@@ -15,6 +15,26 @@ fountainButton.after(rereadLetter);
 let giftHasOpened = sessionStorage.getItem('ha-gift-opened') === 'yes';
 let fountainBusy = false;
 let letterOverflow = '';
+let preparedGiftPhotos;
+function prepareGiftPhotos() {
+  if (!preparedGiftPhotos) {
+    let ready = 0;
+    const photos = Array.from({ length: 27 }, (_, index) => {
+      const image = new Image(); image.src = photoPath(index + 1); image.alt = ''; image.className = 'champagne-photo'; return image;
+    });
+    preparedGiftPhotos = Promise.all(photos.map(image => image.decode().catch(() => {}).then(() => {
+      ready++;
+      if (fountainBusy) fountainButton.querySelector('.gift-tap').textContent = `ĐANG GOM ẢNH · ${ready}/27`;
+    }))).then(() => photos);
+  }
+  return preparedGiftPhotos;
+}
+if (motionOkay() && !giftHasOpened) {
+  const giftPreloader = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) { prepareGiftPhotos(); giftPreloader.disconnect(); }
+  }, { rootMargin: '1600px 0px' });
+  giftPreloader.observe(document.querySelector('#surprise'));
+}
 function markGiftOpened() {
   fountainButton.classList.add('open'); fountainButton.disabled = true;
   fountainButton.setAttribute('aria-expanded', 'true');
@@ -55,10 +75,7 @@ fountainButton.addEventListener('click', async () => {
   fountainButton.disabled = true;
   fountainButton.querySelector('.gift-tap').textContent = 'ĐANG CHUẨN BỊ BẤT NGỜ…';
   if (motionOkay()) {
-    const photos = Array.from({ length: 27 }, (_, index) => {
-      const image = new Image(); image.src = photoPath(index + 1); image.alt = ''; image.className = 'champagne-photo'; return image;
-    });
-    await Promise.all(photos.map(image => image.decode().catch(() => {})));
+    const photos = await prepareGiftPhotos();
     const rect = fountainButton.getBoundingClientRect();
     const originX = rect.left + rect.width / 2, originY = rect.top + rect.height * .35;
     fountainButton.classList.add('open');
