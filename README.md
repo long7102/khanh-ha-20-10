@@ -1,35 +1,23 @@
 # Gửi Khánh Hạ — 20/10
 
-Một website Love Scrapbook responsive trên laptop và điện thoại, với hành trình bảy tháng, album tóc ngắn đến tóc dài và mini game 20/10. Nhạc vẫn là placeholder để thay sau.
+Website HTML, CSS và JavaScript thuần, không cần cài thư viện hay build.
 
-## Chạy trên máy
+- `index.html`: trang đăng nhập với ảnh trôi nhẹ.
+- `scrapbook.html`: scrapbook, hành trình bảy tháng, album và mini game.
+- `public/styles.css`: giao diện xanh dương, responsive và reduced motion.
+- `public/app.js`: hiệu ứng cuộn, nghiêng ảnh 3D, bộ đếm, hộp quà bung 27 ảnh rồi mở thư.
+- `public/login.js`, `public/access.js`: cửa vào phía trình duyệt. Thông tin đối chiếu lưu dưới dạng SHA-256; đây là trải nghiệm đăng nhập cho trang công khai, không bảo vệ nội dung như xác thực server.
+- `public/media/`: 27 ảnh xếp bằng mắt từ tóc ngắn đến tóc dài, được công khai theo yêu cầu.
 
-Yêu cầu Node.js 20 trở lên. Sao chép `.env.example` thành `.env`, điền `SITE_USERNAME`, `SITE_PASSWORD` và một `SESSION_SECRET` ngẫu nhiên dài ít nhất 32 ký tự. Không commit file `.env`.
+## GitHub Pages
 
-```bash
-npm start
-```
+Trong Settings → Pages, chọn Deploy from a branch → main → / (root) → Save.
 
-Mở `http://localhost:3000`. Node không tự nạp `.env`; khi chạy cục bộ, xuất các biến môi trường trong terminal hoặc dùng trình quản lý môi trường của nền tảng triển khai. Ví dụ PowerShell:
-
-```powershell
-$env:SITE_USERNAME = "ten-dang-nhap"
-$env:SITE_PASSWORD = "mat-khau-rieng"
-$env:SESSION_SECRET = "mot-chuoi-ngau-nhien-dai-it-nhat-32-ky-tu"
-npm start
-```
+Trang dự kiến: https://long7102.github.io/khanh-ha-20-10/
 
 ## Thay nội dung
 
-- `private/home.html`: lời chúc, thư, các mốc câu chuyện và món quà bí mật.
-- `public/styles.css`: màu sắc, bố cục và hiệu ứng.
-- `public/app.js`: đếm ngày, album xếp từ tóc ngắn đến tóc dài, hiệu ứng cuộn, bất ngờ, mini game và nhạc.
-- 27 ảnh cá nhân nằm trong `public/media/photo-01.jpg` đến `photo-27.jpg`, được xếp bằng mắt từ tóc ngắn đến dài và được đưa lên repository công khai theo yêu cầu. Có thể thay từng ảnh mà không cần sửa mã.
-- Nhạc: đặt file trong `public/media/`, rồi gán đường dẫn vào `AUDIO_SRC` trong `public/app.js`.
+Sửa trực tiếp HTML, CSS hoặc JavaScript rồi commit. Nhạc hiện là placeholder: thêm file vào `public/media/` và đặt `AUDIO_SRC` trong `public/app.js` thành đường dẫn tương đối, ví dụ `./public/media/our-song.mp3`.
 
-## Bảo vệ truy cập
-
-Server chỉ gửi trang nội dung và ảnh khi có cookie phiên đã ký. Username, password và khóa ký được đọc từ biến môi trường phía server. Nếu thiếu cấu hình, đăng nhập bị vô hiệu hóa. Cookie dùng `HttpOnly`, `SameSite=Lax` và `Secure` trên HTTPS. Nên triển khai sau HTTPS và đặt bí mật trong phần cấu hình môi trường của nhà cung cấp hosting. Không dùng GitHub Pages vì đây là ứng dụng cần server.
-
-Đây là cổng truy cập đơn giản cho một website cá nhân, không có hệ thống tài khoản hay khôi phục mật khẩu. Đổi thông tin đăng nhập bằng cách cập nhật biến môi trường và khởi động lại server.
+Nếu đổi thông tin đăng nhập, cập nhật hash SHA-256 của chuỗi `username:password:salt` trong `public/access.js`.
 
