@@ -21,10 +21,15 @@
     const depth = Math.min(1, Math.max(0, scrollY / range));
     const dark = root.dataset.theme === 'dark';
     root.style.setProperty('--sea-depth', depth.toFixed(4));
-    root.style.setProperty('--sea-lightness', `${(dark ? 25 - depth * 15 : 96 - depth * 77).toFixed(2)}%`);
+    const lightness = dark ? 25 - depth * 15 : 96 - depth * 77;
+    const lightInk = dark || lightness < 44.5;
+    root.style.setProperty('--sea-lightness', `${lightness.toFixed(2)}%`);
+    root.style.setProperty('--reading-ink', lightInk ? '#f3fcff' : lightness < 62 ? '#000000' : '#123849');
+    root.style.setProperty('--reading-muted', lightInk ? '#e3f3f8' : lightness < 62 ? '#000000' : '#31586a');
+    root.style.setProperty('--reading-accent', lightInk ? '#d6f1f6' : lightness < 62 ? '#082e40' : '#28738c');
     const zone = depth < .3 ? 'surface' : depth < .67 ? 'reef' : 'deep';
     root.dataset.seaZone = zone;
-    root.dataset.seaInk = dark || depth > .61 ? 'light' : 'dark';
+    root.dataset.seaInk = lightInk ? 'light' : 'dark';
     depthMarker.querySelector('.depth-name').textContent = zone === 'surface' ? 'MẶT NƯỚC' : zone === 'reef' ? 'MIỀN SAN HÔ' : 'BIỂN SÂU';
     if (!reduced.matches) atmosphere.style.setProperty('--far-offset', `${depth * -45}px`);
     scrollQueued = false;

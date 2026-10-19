@@ -32,7 +32,7 @@ async function enterScrapbook() {
   voyage.hidden = false;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 1700));
-  window.location.replace(`./scrapbook.html?v=18${preview ? '&preview=1' : ''}`);
+  window.location.replace(`./scrapbook.html?v=19${preview ? '&preview=1' : ''}`);
 }
 function updateRelease() {
   const open = canEnter();
