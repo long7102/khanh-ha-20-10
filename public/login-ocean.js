@@ -35,7 +35,7 @@
   new MutationObserver(() => {
     if (!document.body.classList.contains('entering') || window.__chomped) return;
     window.__chomped = true;
-    setTimeout(() => window.SharkChomp?.shut({ remember: true }), 1050);
+    setTimeout(() => window.SharkChomp?.bite({ remember: true }), 1300);
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   // Never keep the page behind the loader, even if WebGL or the CDN fails.
   setTimeout(() => { document.getElementById('loader')?.classList.add('done'); document.body.classList.add('loaded'); }, 2500);

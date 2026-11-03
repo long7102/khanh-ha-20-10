@@ -31,7 +31,7 @@ async function enterScrapbook() {
   document.body.classList.add('entering');
   voyage.hidden = false;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 1700));
+  await new Promise(resolve => setTimeout(resolve, reduced ? 0 : 3300));
   window.location.replace(`./scrapbook.html?v=20${preview ? '&preview=1' : ''}`);
 }
 function updateRelease() {

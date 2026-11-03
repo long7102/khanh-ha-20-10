@@ -2,3 +2,4 @@
 #fish{position:fixed;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
 #fish.ready{opacity:1}#fish.hush{opacity:0}
 #fish.front{z-index:30}
+#sea-life{position:fixed;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}

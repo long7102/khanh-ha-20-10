@@ -23,10 +23,20 @@
 
   const shut = async ({ remember = false } = {}) => {
     const el = build(); if (remember) { try { sessionStorage.setItem(KEY, '1'); } catch { /* storage blocked */ } }
-    el.getBoundingClientRect(); el.classList.add('shut'); await wait(reduced() ? 20 : 560);
+    el.getBoundingClientRect(); el.classList.remove('wide'); el.classList.add('shut'); await wait(reduced() ? 20 : 400);
   };
-  const open = async () => { const el = build(); el.classList.remove('shut'); await wait(reduced() ? 20 : 950); };
-  const run = async midpoint => { await shut(); try { await midpoint?.(); } finally { await wait(120); await open(); } };
+  // The full bite: jaws open wide and loom over the screen, hold for a beat, then slam shut with a shake.
+  const bite = async ({ remember = false } = {}) => {
+    const el = build();
+    if (remember) { try { sessionStorage.setItem(KEY, '1'); } catch { /* storage blocked */ } }
+    if (reduced()) return shut({ remember });
+    el.getBoundingClientRect(); el.classList.add('wide'); await wait(850);
+    await wait(380);
+    await shut({ remember });
+    el.classList.add('shake'); await wait(460); el.classList.remove('shake');
+  };
+  const open = async () => { const el = build(); el.classList.remove('shut', 'wide'); await wait(reduced() ? 20 : 950); };
+  const run = async midpoint => { await bite(); try { await midpoint?.(); } finally { await wait(150); await open(); } };
 
   addEventListener('DOMContentLoaded', async () => {
     if (!carried) return;
@@ -38,5 +48,5 @@
     el.querySelectorAll('.jaw').forEach(jaw => { jaw.style.transition = ''; });
     open();
   });
-  window.SharkChomp = { shut, open, run };
+  window.SharkChomp = { shut, bite, open, run };
 })();

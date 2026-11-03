@@ -176,7 +176,7 @@ function start() {
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerpAngle = (a, b, t) => a + (((b - a + 540) % 360) - 180) * t;
-  let posed = null, poseChange = 0, currentSection = '', lastSection = null, flourishAt = -1e9, excite = null;
+  let posed = null, poseChange = 0, currentSection = '', lastSection = null, flourishAt = -1e9, excite = null, dart = { start: -1e9, dir: 1, reach: 0, dy: 0 }, nextDart = performance.now() + 2500, wanderXPrev = 0, wanderDir = 1;
   // The scrapbook (or login) can tell the shark to go wild around a spot: dispatchEvent(new CustomEvent('shark:excite', { detail: { x, y, ms } })).
   addEventListener('shark:excite', event => {
     const { x, y, ms = 5200 } = event.detail || {}; const now = performance.now();
@@ -222,9 +222,16 @@ function start() {
     if (fl) goal.moving = Math.max(goal.moving || 0, fl);
     // Resting in a section, the shark patrols back and forth behind the content.
     const rest = config.pose || config.patrol === false || excite ? 0 : 1 - clamp(cur.moving * 3, 0, 1);
-    const patrolSin = Math.sin(t * .42);
-    goal.x += patrolSin * .17 * rest; goal.y += Math.sin(t * .27) * .03 * rest;
-    let forceYaw = rest > .5 ? (Math.cos(t * .42) > 0 ? 16 : 164) : null;
+    // Wander: slow overlapping waves in x, y and depth never repeat in step, plus a sudden dart every few seconds.
+    if (now > nextDart) { dart = { start: now, dir: Math.random() < .5 ? -1 : 1, reach: .22 + Math.random() * .2, dy: (Math.random() - .5) * .3 }; nextDart = now + 4500 + Math.random() * 6500; }
+    const dp = clamp((now - dart.start) / 1500, 0, 1), dartPush = Math.sin(dp * Math.PI);
+    const wanderX = Math.sin(t * .37 + 1.3) * .15 + Math.sin(t * .91 + 4.1) * .07 + Math.sin(t * .23 + 2.2) * .1 + dart.dir * dart.reach * dartPush;
+    const wanderY = Math.sin(t * .29 + .6) * .07 + Math.sin(t * .77 + 3.3) * .03 + Math.sin(t * .13) * .08 + dart.dy * dartPush;
+    const patrolDx = (wanderX - wanderXPrev) / Math.max(dt, 1e-4); wanderXPrev = wanderX;
+    if (rest > .5 && Math.abs(patrolDx) > .015) wanderDir = patrolDx > 0 ? 1 : -1;
+    goal.x += wanderX * rest; goal.y += wanderY * rest; goal.z = (goal.z || 0) + Math.sin(t * .21 + .9) * .7 * rest;
+    goal.moving = Math.max(goal.moving || 0, dartPush * rest);
+    let forceYaw = rest > .5 ? (wanderDir > 0 ? 16 : 164) : null;
     // Excited: orbit the gift, swinging in front of it and behind it.
     if (excite) {
       const e = (now - excite.start) / 1000, theta = e * 2.7, ramp = clamp(e / .6, 0, 1), rx = (.3 + .06 * Math.sin(e * 1.3)) * ramp, ry = .2 * ramp;
