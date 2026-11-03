@@ -1,4 +1,4 @@
-// Underwater light over the login photo wall, plus where the 3D fish rests.
+// Underwater light over the login photo wall, plus where the 3D shark rests.
 (() => {
   const scene = document.querySelector('.login-scene');
   if (scene) {
@@ -12,17 +12,17 @@
     scene.append(water);
   }
 
-  // The shell isolates its layers; the fish joins them so phones can tuck it behind the glass.
+  // The shell isolates its layers; the shark joins them so phones can tuck it behind the glass.
   const fish = document.getElementById('fish'); document.querySelector('.login-shell')?.prepend(fish);
 
-  // Rest beside the glass panel; swim to the middle when the form is hidden to look at the sea.
+  // The shark rests beside the glass panel; swim to the middle when the form is hidden to look at the sea.
   const panel = document.querySelector('.login-panel');
   const poses = {
-    desktop: { x: -.62, y: -.08, s: .78, yaw: 28, pitch: 4, roll: -4 },
-    open: { x: .02, y: -.02, s: 1.05, yaw: 150, pitch: 6, roll: 4 },
-    mobile: { x: .3, y: .3, s: .62, yaw: 155, pitch: 4, roll: 0 },
-    mobileOpen: { x: 0, y: .05, s: .85, yaw: 150, pitch: 6, roll: 4 },
-    voyage: { x: 1.6, y: -.3, s: .9, yaw: 10, pitch: -8, roll: 0 }
+    desktop: { x: -.62, y: -.08, s: 1.9, yaw: 28, pitch: 4, roll: -4 },
+    open: { x: .02, y: -.02, s: 2.5, yaw: 150, pitch: 6, roll: 4 },
+    mobile: { x: .3, y: .3, s: 1.4, yaw: 155, pitch: 4, roll: 0 },
+    mobileOpen: { x: 0, y: .05, s: 1.8, yaw: 150, pitch: 6, roll: 4 },
+    voyage: { x: 1.6, y: -.3, s: 2, yaw: 10, pitch: -8, roll: 0 }
   };
   window.FISH_PATH = {
     pose(mobile) {

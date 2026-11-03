@@ -1,4 +1,4 @@
-// A procedural clownfish that swims to a resting spot in every section as the page scrolls.
+// A procedural shark that swims to a resting spot in every section as the page scrolls.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -44,96 +44,104 @@ function start() {
     return material;
   };
 
-  // Body: a lathe profile, revolved around the length axis and pressed flat at the sides.
-  const A = .474, radius = u => A * Math.pow(u, .9) * Math.pow(1 - u, .5);
+  // Body: a torpedo lathe, thickest just behind the head, tapering to a slim tail stalk.
+  const A = .5, radius = u => A * Math.pow(u, 1.1) * Math.pow(1 - u, .7);
   const profile = [];
-  for (let i = 0; i <= 72; i++) { const u = i / 72; profile.push(new THREE.Vector2(Math.max(radius(u), 1e-4), u - .5)); }
-  const body = new THREE.LatheGeometry(profile, 56);
+  for (let i = 0; i <= 96; i++) { const u = i / 96; profile.push(new THREE.Vector2(Math.max(radius(u), 1e-4), u - .5)); }
+  const body = new THREE.LatheGeometry(profile, 64);
   body.rotateZ(-Math.PI / 2);
-  body.scale(1, 1.08, .62);
+  body.scale(1, 1, .8);
+  // Countershading: slate back, pale belly, with a soft darker ridge along the top.
   const colors = []; const pos = body.attributes.position; const c = new THREE.Color();
-  const orange = new THREE.Color(0xff6a10), belly = new THREE.Color(0xffa45a), white = new THREE.Color(0xfffbf4), black = new THREE.Color(0x1b130f);
-  const bands = [{ at: .79, w: .052 }, { at: .5, w: .062 }, { at: .16, w: .03 }];
+  const back = new THREE.Color(0x4a7bad), ridge = new THREE.Color(0x30598a), belly = new THREE.Color(0xf6fafc);
   for (let i = 0; i < pos.count; i++) {
-    const u = pos.getX(i) + .5, y = pos.getY(i);
-    c.copy(orange).lerp(belly, THREE.MathUtils.clamp(-y * 3.2, 0, .7));
-    for (const band of bands) {
-      const wobble = band.w + Math.sin(y * 22) * .006, d = Math.abs(u - band.at - y * .07);
-      if (d < wobble) c.copy(white); else if (d < wobble + .012) c.copy(black);
-    }
+    const y = pos.getY(i);
+    c.copy(belly).lerp(back, THREE.MathUtils.smoothstep(y, -.035, .025)).lerp(ridge, THREE.MathUtils.smoothstep(y, .05, .11) * .8);
     colors.push(c.r, c.g, c.b);
   }
   body.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  holder.add(new THREE.Mesh(body, bend(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .34, clearcoat: 1, clearcoatRoughness: .16, sheen: .45, sheenColor: new THREE.Color(0xffd2a8), envMapIntensity: .8 }))));
+  holder.add(new THREE.Mesh(body, bend(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .3, clearcoat: 1, clearcoatRoughness: .18, sheen: .5, sheenColor: new THREE.Color(0xcfe6f2), envMapIntensity: .85 }))));
 
-  // Fins are painted on canvas, so their rays and black-white margins survive the bend.
+  // Fins are painted on canvas so they can be cut to shape and still bend with the body.
   const finTexture = draw => {
     const surface = document.createElement('canvas'); surface.width = 512; surface.height = 512;
     const ctx = surface.getContext('2d'); draw(ctx, 512);
     const texture = new THREE.CanvasTexture(surface); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
     return texture;
   };
-  const paintFin = (ctx, path, rays) => {
+  const paintFin = (ctx, path, from, to) => {
     ctx.save(); path(); ctx.clip();
-    const fill = ctx.createLinearGradient(rays.from[0], rays.from[1], rays.to[0], rays.to[1]);
-    fill.addColorStop(0, '#ff7a1c'); fill.addColorStop(.72, '#ff8a2c'); fill.addColorStop(.73, '#1b130f'); fill.addColorStop(.86, '#1b130f'); fill.addColorStop(.87, '#fff6ec'); fill.addColorStop(1, '#ffffff');
+    const fill = ctx.createLinearGradient(from[0], from[1], to[0], to[1]);
+    fill.addColorStop(0, '#5686b6'); fill.addColorStop(.7, '#43719f'); fill.addColorStop(1, '#325b86');
     ctx.fillStyle = fill; ctx.fillRect(0, 0, 512, 512);
-    ctx.strokeStyle = 'rgba(150,40,0,.35)'; ctx.lineWidth = 3;
-    for (let i = 0; i <= 14; i++) {
-      const t = i / 14; ctx.beginPath(); ctx.moveTo(rays.from[0], rays.from[1]);
-      ctx.lineTo(rays.edge(t)[0], rays.edge(t)[1]); ctx.stroke();
-    }
     ctx.restore();
   };
-  const finMaterial = map => bend(new THREE.MeshStandardMaterial({ map, transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .42, metalness: 0, depthWrite: false, envMapIntensity: .7 }));
+  const finMaterial = map => bend(new THREE.MeshStandardMaterial({ map, transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .5, metalness: 0, depthWrite: false, envMapIntensity: .7 }));
   const addFin = (texture, x0, x1, y0, y1, z = 0) => {
-    const plane = new THREE.PlaneGeometry(x1 - x0, y1 - y0, 24, 12);
+    const plane = new THREE.PlaneGeometry(x1 - x0, y1 - y0, 28, 12);
     plane.translate((x0 + x1) / 2, (y0 + y1) / 2, z);
     const mesh = new THREE.Mesh(plane, finMaterial(texture)); mesh.renderOrder = 2; holder.add(mesh); return mesh;
   };
   // Map fin space to canvas: x0..x1 -> 0..512, y1..y0 -> 0..512.
   const toCanvas = (x0, x1, y0, y1) => (x, y) => [(x - x0) / (x1 - x0) * 512, (y1 - y) / (y1 - y0) * 512];
 
-  { const m = toCanvas(-.8, -.4, -.25, .25);
+  // Tail: crescent, upper lobe longer than the lower.
+  { const m = toCanvas(-.8, -.44, -.28, .32);
     addFin(finTexture(ctx => paintFin(ctx, () => {
-      ctx.beginPath(); ctx.moveTo(...m(-.43, .045));
-      ctx.quadraticCurveTo(...m(-.6, .22), ...m(-.76, .17)); ctx.quadraticCurveTo(...m(-.81, 0), ...m(-.76, -.17));
-      ctx.quadraticCurveTo(...m(-.6, -.22), ...m(-.43, -.045)); ctx.closePath();
-    }, { from: m(-.43, 0), to: m(-.79, 0), edge: t => m(-.78 + Math.abs(t - .5) * .06, .19 - t * .38) })), -.8, -.4, -.25, .25); }
+      ctx.beginPath(); ctx.moveTo(...m(-.46, .022));
+      ctx.quadraticCurveTo(...m(-.58, .1), ...m(-.77, .3)); ctx.quadraticCurveTo(...m(-.67, .09), ...m(-.65, 0));
+      ctx.quadraticCurveTo(...m(-.67, -.06), ...m(-.72, -.21)); ctx.quadraticCurveTo(...m(-.55, -.08), ...m(-.46, -.022)); ctx.closePath();
+    }, m(-.46, 0), m(-.77, .3))), -.8, -.44, -.28, .32); }
 
-  { const m = toCanvas(-.36, .3, .05, .36);
+  // First dorsal: the tall swept triangle.
+  { const m = toCanvas(-.1, .2, .05, .35);
     addFin(finTexture(ctx => paintFin(ctx, () => {
-      ctx.beginPath(); ctx.moveTo(...m(-.34, .07)); ctx.quadraticCurveTo(...m(-.3, .25), ...m(-.18, .27));
-      ctx.quadraticCurveTo(...m(-.08, .26), ...m(-.03, .2)); ctx.quadraticCurveTo(...m(.04, .27), ...m(.13, .3));
-      ctx.quadraticCurveTo(...m(.22, .28), ...m(.27, .16)); ctx.lineTo(...m(.27, .06)); ctx.closePath();
-    }, { from: [256, 512], to: [256, 30], edge: t => m(-.33 + t * .6, .3) })), -.36, .3, .05, .36); }
+      ctx.beginPath(); ctx.moveTo(...m(.18, .05)); ctx.quadraticCurveTo(...m(.1, .17), ...m(-.01, .34));
+      ctx.quadraticCurveTo(...m(-.02, .17), ...m(-.09, .05)); ctx.closePath();
+    }, m(.05, .05), m(-.01, .34))), -.1, .2, .05, .35); }
 
-  { const m = toCanvas(-.34, -.02, -.32, -.04);
+  // Small second dorsal and anal fin near the tail stalk.
+  { const m = toCanvas(-.36, -.16, .03, .15);
     addFin(finTexture(ctx => paintFin(ctx, () => {
-      ctx.beginPath(); ctx.moveTo(...m(-.05, -.06)); ctx.quadraticCurveTo(...m(-.12, -.3), ...m(-.24, -.27));
-      ctx.quadraticCurveTo(...m(-.32, -.2), ...m(-.33, -.06)); ctx.closePath();
-    }, { from: m(-.18, -.05), to: m(-.22, -.3), edge: t => m(-.32 + t * .26, -.29) })), -.34, -.02, -.32, -.04); }
+      ctx.beginPath(); ctx.moveTo(...m(-.17, .04)); ctx.quadraticCurveTo(...m(-.23, .08), ...m(-.3, .145)); ctx.quadraticCurveTo(...m(-.31, .08), ...m(-.35, .04)); ctx.closePath();
+    }, m(-.2, .04), m(-.3, .145))), -.36, -.16, .03, .15); }
+  { const m = toCanvas(-.36, -.16, -.15, -.03);
+    addFin(finTexture(ctx => paintFin(ctx, () => {
+      ctx.beginPath(); ctx.moveTo(...m(-.17, -.04)); ctx.quadraticCurveTo(...m(-.23, -.08), ...m(-.3, -.145)); ctx.quadraticCurveTo(...m(-.31, -.08), ...m(-.35, -.04)); ctx.closePath();
+    }, m(-.2, -.04), m(-.3, -.145))), -.36, -.16, -.15, -.03); }
 
-  // Pectoral fins hinge near the gills and paddle on their own rhythm.
-  const pectoralTexture = finTexture(ctx => paintFin(ctx, () => {
-    ctx.beginPath(); ctx.moveTo(0, 230); ctx.quadraticCurveTo(250, 40, 470, 150); ctx.quadraticCurveTo(512, 256, 470, 360); ctx.quadraticCurveTo(250, 470, 0, 282); ctx.closePath();
-  }, { from: [0, 256], to: [500, 256], edge: t => [480, 150 + t * 210] }));
+  // Pectorals: long swept blades, held out and down, rocking gently. The flipped texture mirrors the left one.
+  const pectoral = flip => finTexture(ctx => {
+    if (flip) { ctx.translate(0, 512); ctx.scale(1, -1); }
+    paintFin(ctx, () => { ctx.beginPath(); ctx.moveTo(500, 512); ctx.quadraticCurveTo(430, 240, 90, 10); ctx.quadraticCurveTo(250, 260, 300, 512); ctx.closePath(); }, [400, 512], [90, 0]);
+  });
   const paddles = [];
   for (const side of [1, -1]) {
-    const hinge = new THREE.Group(); hinge.position.set(.2, -.05, .092 * side);
-    const fin = new THREE.Mesh(new THREE.PlaneGeometry(.17, .1).translate(-.085, 0, 0).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ map: pectoralTexture, transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .42, depthWrite: false }));
+    const hinge = new THREE.Group(); hinge.position.set(.22, -.09, .11 * side);
+    const geometry = new THREE.PlaneGeometry(.24, .3, 8, 8).translate(-.12, 0, 0).rotateX(Math.PI / 2).translate(0, 0, .15 * side);
+    const fin = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ map: pectoral(side < 0), transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .5, depthWrite: false }));
     fin.renderOrder = 3; hinge.add(fin); holder.add(hinge); paddles.push({ hinge, side });
   }
 
-  // Eyes: gold ring, glossy black pupil, one catchlight.
+  // Eyes: small, black and glossy with one catchlight.
   for (const side of [1, -1]) {
-    const eye = new THREE.Group(); eye.position.set(.355, .045, .084 * side);
-    eye.add(new THREE.Mesh(new THREE.SphereGeometry(.036, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0xffb02e, roughness: .3, clearcoat: 1 })));
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(.027, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0x050505, roughness: .05, clearcoat: 1, clearcoatRoughness: .02 }));
-    pupil.position.z = .013 * side; eye.add(pupil);
-    const glint = new THREE.Mesh(new THREE.SphereGeometry(.0075, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    glint.position.set(.01, .012, .036 * side); eye.add(glint);
+    const eye = new THREE.Group(); eye.position.set(.385, .045, .07 * side);
+    eye.add(new THREE.Mesh(new THREE.SphereGeometry(.027, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0x050607, roughness: .08, clearcoat: 1, clearcoatRoughness: .02 })));
+    const glint = new THREE.Mesh(new THREE.SphereGeometry(.0085, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    glint.position.set(.011, .013, .019 * side); eye.add(glint);
     holder.add(eye);
+  }
+
+  // Dark details drawn as thin tubes riding on the skin: the underslung mouth and five gill slits.
+  const inkMaterial = bend(new THREE.MeshStandardMaterial({ color: 0x1c2b35, roughness: .6 }));
+  const surface = (x, angle, lift = 1.02) => { const r = radius(x + .5) * lift; return new THREE.Vector3(x, -r * Math.cos(angle), r * .85 * Math.sin(angle)); };
+  { const points = [];
+    for (let i = 0; i <= 14; i++) { const s = i / 7 - 1; points.push(surface(.375 + .115 * Math.pow(1 - s * s, .6), s * 1.15, 1.03)); }
+    holder.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 40, .0048, 6), inkMaterial)); }
+  for (const side of [1, -1]) for (let i = 0; i < 5; i++) {
+    const x = .3 - i * .017, r = radius(x + .5), points = [];
+    for (let j = 0; j <= 6; j++) { const y = -.055 + j * .0183; points.push(new THREE.Vector3(x - Math.abs(y) * .12, y, side * Math.sqrt(Math.max(r * r - y * y, 0)) * .85 * 1.012)); }
+    holder.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 12, .0024, 5), inkMaterial));
   }
 
   // Normalise: length 1, centred on the origin.
@@ -161,7 +169,7 @@ function start() {
   addEventListener('resize', resize); resize();
 
   // Path: one keyframe per section, x/y in viewport units (-1..1), yaw 0 = facing right, 180 = left.
-  const fallback = [{ x: 0, y: 0, s: 1, yaw: 150, pitch: 4, roll: 0 }];
+  const fallback = [{ x: 0, y: 0, z: 0, s: 1, yaw: 150, pitch: 4, roll: 0 }];
   const sections = [...document.querySelectorAll(config.sections || 'main > section')];
   const frames = () => (innerWidth < 760 ? config.mobile : config.desktop) || fallback;
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -181,15 +189,17 @@ function start() {
     let i = 0;
     sections.forEach((section, index) => { if (section.getBoundingClientRect().top + scrollY <= line) i = index; });
     i = Math.min(i, K.length - 1);
-    if (!i) return { ...K[0], moving: 0 };
+    if (!i) return { ...K[0], z: K[0].z || 0, moving: 0, spin: 0 };
     // Rest inside each section; swim across the boundary over 0.8 viewport of scrolling.
     const top = sections[i].getBoundingClientRect().top + scrollY;
     const t = ease(clamp((line - top + innerHeight * .1) / (innerHeight * .8), 0, 1));
     const a = K[i - 1], b = K[i], arc = Math.sin(t * Math.PI);
-    return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) + arc * -.2, s: lerp(a.s, b.s, t) * (1 + arc * .1), yaw: lerpAngle(a.yaw, b.yaw, t), pitch: lerp(a.pitch, b.pitch, t), roll: lerp(a.roll, b.roll, t), moving: arc };
+    // Mid-flight the shark dives, banks into the turn, and may corkscrew once (spin is added after smoothing so it stays in step with the scroll).
+    const bank = (b.x > a.x ? -1 : 1) * arc * 24;
+    return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) + arc * -.28, z: lerp(a.z || 0, b.z || 0, t) + arc * .8, s: lerp(a.s, b.s, t) * (1 + arc * .16), yaw: lerpAngle(a.yaw, b.yaw, t), pitch: lerp(a.pitch, b.pitch, t), roll: lerp(a.roll, b.roll, t) + bank, moving: arc, spin: (b.spin || 0) * t };
   }
 
-  const cur = { ...targetAt() }; let heading = cur.yaw;
+  const cur = { z: 0, ...targetAt() }; let heading = cur.yaw;
   const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
   addEventListener('pointermove', event => { mouse.x = event.clientX / innerWidth * 2 - 1; mouse.y = -(event.clientY / innerHeight * 2 - 1); }, { passive: true });
 
@@ -200,34 +210,35 @@ function start() {
     const dt = Math.min(clock.getDelta(), .05); const calm = reduced.matches ? .35 : 1; t += dt * calm;
     const goal = targetAt(); const k = 1 - Math.exp(-dt * 3.2);
     const px = cur.x, py = cur.y;
-    for (const key of ['x', 'y', 's', 'pitch', 'roll', 'moving']) cur[key] = lerp(cur[key], goal[key], k);
+    for (const key of ['x', 'y', 'z', 's', 'pitch', 'roll', 'moving']) cur[key] = lerp(cur[key], goal[key] || 0, k);
     const vx = (cur.x - px) / Math.max(dt, 1e-4), vy = (cur.y - py) / Math.max(dt, 1e-4);
-    // A fish never swims backwards: while travelling, the nose turns into the direction of travel.
+    // A shark never swims backwards: while travelling, the nose turns into the direction of travel.
     const travel = vx > 0 ? 18 : 162, pull = clamp((Math.abs(vx) - .04) * 2.4, 0, .9);
     heading = lerpAngle(heading, lerpAngle(goal.yaw, travel, pull), 1 - Math.exp(-dt * 2.6));
     mouse.sx = lerp(mouse.sx, mouse.x, 1 - Math.exp(-dt * 2)); mouse.sy = lerp(mouse.sy, mouse.y, 1 - Math.exp(-dt * 2));
 
     const halfH = Math.tan(deg(camera.fov / 2)) * camera.position.z, halfW = halfH * camera.aspect;
     const hover = (Math.sin(t * 1.4) * .045 + Math.sin(t * 2.3) * .015) * calm;
-    flight.position.set(cur.x * halfW + Math.sin(t * .9) * .05 * calm + mouse.sx * .12, cur.y * halfH + hover * halfH * .5 + mouse.sy * .08, Math.sin(t * .6) * .15);
+    flight.position.set(cur.x * halfW + Math.sin(t * .9) * .05 * calm + mouse.sx * .12, cur.y * halfH + hover * halfH * .5 + mouse.sy * .08, cur.z + Math.sin(t * .6) * .15);
     flight.scale.setScalar(halfH * 2 * .3 * cur.s);
-    flight.rotation.set(0, -deg(heading + mouse.sx * 12), 0);
-    const pitch = cur.pitch + clamp(vy * 22, -26, 26) + Math.sin(t * 1.4 + 1) * 3 + mouse.sy * 6;
-    const roll = cur.roll - clamp(vx * 12, -18, 18) + Math.sin(t * 1.1) * 3;
+    flight.rotation.set(0, -deg(heading + mouse.sx * 22), 0);
+    const pitch = cur.pitch + clamp(vy * 22, -26, 26) + Math.sin(t * 1.4 + 1) * 3 + mouse.sy * 9;
+    const roll = cur.roll - clamp(vx * 12, -18, 18) + Math.sin(t * 1.1) * 3 + (goal.spin || 0) * (config.spin === false ? 0 : 1);
     fishRoot.rotation.set(deg(roll), 0, deg(pitch), 'YZX');
 
-    // Tail beat speeds up and widens mid-swim, like the wing beat it replaces.
+    // Tail beat speeds up and widens mid-swim.
     const effort = clamp(cur.moving + Math.hypot(vx, vy) * .6, 0, 1.4);
-    swim.uFreq.value = Math.PI * 2 * (1.5 + effort * 1.6); swim.uAmp.value = (.035 + effort * .05) * calm;
+    swim.uFreq.value = Math.PI * 2 * (1.5 + effort * 1.6); swim.uAmp.value = (.035 + effort * .07) * calm;
     swim.uTime.value = t;
-    for (const { hinge, side } of paddles) { const a = Math.sin(t * swim.uFreq.value * .55 + (side > 0 ? 0 : .6)); hinge.rotation.set(0, side * (-.55 - a * .45), a * .2); }
+    for (const { hinge, side } of paddles) { const a = Math.sin(t * swim.uFreq.value * .55 + (side > 0 ? 0 : .6)); hinge.rotation.set(side * (.5 + a * .07), 0, 0); }
 
     nextBubble -= dt;
     if (nextBubble <= 0 && !reduced.matches) {
-      nextBubble = 1.1 + Math.random() * 1.8;
+      nextBubble = (1.1 + Math.random() * 1.8) / (1 + effort * 5);
       const free = bubbles.find(b => !b.sprite.visible);
       if (free) {
-        mouth.set(.5, .02, 0); holder.localToWorld(mouth);
+        if (effort > .35) mouth.set(-.5 + Math.random() * .12, (Math.random() - .5) * .06, (Math.random() - .5) * .06); else mouth.set(.49, -.04, 0);
+        holder.localToWorld(mouth);
         free.sprite.position.copy(mouth); free.sprite.visible = true;
         free.life = 0; free.max = 2.4 + Math.random(); free.drift = Math.random() * 6; free.size = flight.scale.x * (.025 + Math.random() * .03);
       }
