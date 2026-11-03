@@ -26,6 +26,12 @@
   window.FISH_PATH = {
     sections: stops.map(stop => stop[0]).join(','),
     desktop: stops.map(stop => stop[1]),
-    mobile: stops.map(stop => stop[2])
+    mobile: stops.map(stop => stop[2]),
+    // Companions roam the whole page behind the text, far away and small.
+    companions: [
+      { palette: 'teal', s: .8, y: .45, z: -1.8, speed: .1, amp: .09 },
+      { palette: 'indigo', s: .6, y: -.4, z: -2.6, speed: .14, amp: .1 },
+      { palette: 'slate', s: 1, y: .05, z: -3.2, speed: .07, amp: .06 }
+    ]
   };
 })();

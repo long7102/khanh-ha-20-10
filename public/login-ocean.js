@@ -15,21 +15,29 @@
   // The shell isolates its layers; the shark joins them so phones can tuck it behind the glass.
   const fish = document.getElementById('fish'); document.querySelector('.login-shell')?.prepend(fish);
 
-  // The shark rests beside the glass panel; swim to the middle when the form is hidden to look at the sea.
+  // The lead shark roams the whole screen, left and right (behind the glass panel); when the form is hidden it is bigger.
+  // Companions of other colours and sizes cross at different depths. While logging in it charges the camera instead.
   const panel = document.querySelector('.login-panel');
   const poses = {
-    desktop: { x: -.62, y: -.08, s: 1.9, yaw: 28, pitch: 4, roll: -4 },
-    open: { x: .02, y: -.02, s: 2.5, yaw: 150, pitch: 6, roll: 4 },
-    mobile: { x: .3, y: .3, s: 1.4, yaw: 155, pitch: 4, roll: 0 },
-    mobileOpen: { x: 0, y: .05, s: 1.8, yaw: 150, pitch: 6, roll: 4 },
-    voyage: { x: 0, y: -.02, z: 2.6, s: 3.4, yaw: 90, pitch: 0, roll: 0 }
+    desktop: { x: 0, y: -.05, s: 1.55, yaw: 28, pitch: 4, roll: -4 },
+    open: { x: 0, y: -.02, s: 2.1, yaw: 150, pitch: 6, roll: 4 },
+    mobile: { x: 0, y: .25, s: 1.2, yaw: 155, pitch: 4, roll: 0 },
+    mobileOpen: { x: 0, y: .05, s: 1.5, yaw: 150, pitch: 6, roll: 4 },
+    voyage: { x: 0, y: -.02, z: 2.6, s: 3.4, yaw: 90, pitch: 0, roll: 0, fixed: true }
   };
   window.FISH_PATH = {
+    roam: true,
     pose(mobile) {
       if (document.body.classList.contains('entering')) return poses.voyage;
       const hidden = panel?.classList.contains('is-hidden');
       return mobile ? (hidden ? poses.mobileOpen : poses.mobile) : (hidden ? poses.open : poses.desktop);
-    }
+    },
+    companions: [
+      { palette: 'teal', s: .95, y: .38, z: -.8, speed: .11, amp: .09 },
+      { palette: 'indigo', s: .7, y: -.45, z: -1.6, speed: .15, amp: .12 },
+      { palette: 'slate', s: 1.15, y: -.15, z: -2.4, speed: .08, amp: .07 },
+      { palette: 'teal', s: .55, y: .62, z: -2.8, speed: .17, amp: .1 }
+    ]
   };
   // Logging in: the shark charges at the camera, then its jaws close over the whole screen as the scrapbook loads.
   new MutationObserver(() => {
