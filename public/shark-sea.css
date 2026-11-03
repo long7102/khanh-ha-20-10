@@ -1,3 +1,4 @@
 /* The 3D shark on the scrapbook swims in the margins, behind the page text so it never hides anything. */
 #fish{position:fixed;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
 #fish.ready{opacity:1}#fish.hush{opacity:0}
+#fish.front{z-index:30}

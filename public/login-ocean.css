@@ -53,3 +53,6 @@
 @media(prefers-reduced-motion:reduce){.ocean-surface,.ocean-rays i,.ocean-caustics,.ocean-bubble{animation:none}.ocean-bubble{display:none}}
 /* On phones the panel fills the screen, so the fish swims behind the glass instead of over the words. */
 @media(max-width:760px){#fish{z-index:2}.login-panel{position:relative;z-index:3}}
+
+/* While logging in, the charging shark swims over the voyage message. */
+body.entering #fish{z-index:150!important;opacity:1!important}

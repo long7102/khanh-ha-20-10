@@ -22,7 +22,7 @@
     open: { x: .02, y: -.02, s: 2.5, yaw: 150, pitch: 6, roll: 4 },
     mobile: { x: .3, y: .3, s: 1.4, yaw: 155, pitch: 4, roll: 0 },
     mobileOpen: { x: 0, y: .05, s: 1.8, yaw: 150, pitch: 6, roll: 4 },
-    voyage: { x: 1.6, y: -.3, s: 2, yaw: 10, pitch: -8, roll: 0 }
+    voyage: { x: 0, y: -.02, z: 2.6, s: 3.4, yaw: 90, pitch: 0, roll: 0 }
   };
   window.FISH_PATH = {
     pose(mobile) {
@@ -31,6 +31,12 @@
       return mobile ? (hidden ? poses.mobileOpen : poses.mobile) : (hidden ? poses.open : poses.desktop);
     }
   };
+  // Logging in: the shark charges at the camera, then its jaws close over the whole screen as the scrapbook loads.
+  new MutationObserver(() => {
+    if (!document.body.classList.contains('entering') || window.__chomped) return;
+    window.__chomped = true;
+    setTimeout(() => window.SharkChomp?.shut({ remember: true }), 1050);
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   // Never keep the page behind the loader, even if WebGL or the CDN fails.
   setTimeout(() => { document.getElementById('loader')?.classList.add('done'); document.body.classList.add('loaded'); }, 2500);
 })();

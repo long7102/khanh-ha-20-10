@@ -158,7 +158,7 @@ function start() {
     g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.35, 'rgba(220,248,255,.18)'); g.addColorStop(.82, 'rgba(200,240,255,.35)'); g.addColorStop(1, 'rgba(200,240,255,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(32, 32, 30, 0, Math.PI * 2); ctx.fill(); }
   const bubbleMap = new THREE.CanvasTexture(bubbleCanvas); bubbleMap.colorSpace = THREE.SRGBColorSpace;
-  const bubbles = Array.from({ length: 14 }, () => {
+  const bubbles = Array.from({ length: 30 }, () => {
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleMap, transparent: true, depthWrite: false, opacity: 0 }));
     sprite.visible = false; scene.add(sprite); return { sprite, life: 0, max: 1, drift: 0, size: 0 };
   });
@@ -176,7 +176,12 @@ function start() {
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerpAngle = (a, b, t) => a + (((b - a + 540) % 360) - 180) * t;
-  let posed = null, poseChange = 0;
+  let posed = null, poseChange = 0, currentSection = '', lastSection = null, flourishAt = -1e9, excite = null;
+  // The scrapbook (or login) can tell the shark to go wild around a spot: dispatchEvent(new CustomEvent('shark:excite', { detail: { x, y, ms } })).
+  addEventListener('shark:excite', event => {
+    const { x, y, ms = 5200 } = event.detail || {}; const now = performance.now();
+    excite = { cx: x / innerWidth * 2 - 1, cy: -(y / innerHeight * 2 - 1), start: now, until: now + ms }; canvas.classList.add('front');
+  });
   function targetAt() {
     if (config.pose) {
       // Single-screen pages: the page names a pose; the follow smoothing does the swimming.
@@ -189,6 +194,7 @@ function start() {
     let i = 0;
     sections.forEach((section, index) => { if (section.getBoundingClientRect().top + scrollY <= line) i = index; });
     i = Math.min(i, K.length - 1);
+    currentSection = sections[i]?.closest('main > section')?.id || '';
     if (!i) return { ...K[0], z: K[0].z || 0, moving: 0, spin: 0 };
     // Rest inside each section; swim across the boundary over 0.8 viewport of scrolling.
     const top = sections[i].getBoundingClientRect().top + scrollY;
@@ -208,31 +214,49 @@ function start() {
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), .05); const calm = reduced.matches ? .35 : 1; t += dt * calm;
-    const goal = targetAt(); const k = 1 - Math.exp(-dt * 3.2);
+    const now = performance.now(); const goal = { z: 0, ...targetAt() };
+    if (excite && now > excite.until) { excite = null; canvas.classList.remove('front'); }
+    // Every new section gets a flourish: a corkscrew leap and a burst of bubbles.
+    if (!config.pose) { if (lastSection !== null && currentSection !== lastSection) flourishAt = now; lastSection = currentSection; }
+    const fp = clamp((now - flourishAt) / 1400, 0, 1), fl = fp < 1 ? Math.sin(fp * Math.PI) : 0, spinExtra = fp < 1 ? 360 * ease(fp) : 0;
+    if (fl) goal.moving = Math.max(goal.moving || 0, fl);
+    // Resting in a section, the shark patrols back and forth behind the content.
+    const rest = config.pose || config.patrol === false || excite ? 0 : 1 - clamp(cur.moving * 3, 0, 1);
+    const patrolSin = Math.sin(t * .42);
+    goal.x += patrolSin * .17 * rest; goal.y += Math.sin(t * .27) * .03 * rest;
+    let forceYaw = rest > .5 ? (Math.cos(t * .42) > 0 ? 16 : 164) : null;
+    // Excited: orbit the gift, swinging in front of it and behind it.
+    if (excite) {
+      const e = (now - excite.start) / 1000, theta = e * 2.7, ramp = clamp(e / .6, 0, 1), rx = (.3 + .06 * Math.sin(e * 1.3)) * ramp, ry = .2 * ramp;
+      Object.assign(goal, { x: excite.cx + Math.cos(theta) * rx, y: excite.cy + Math.sin(theta) * ry, z: Math.sin(theta) * 1.1, s: 1.45, moving: 1, pitch: Math.cos(theta) * 20, roll: Math.cos(theta) * -22, spin: 0 });
+      forceYaw = -Math.sin(theta) > 0 ? 12 : 168;
+    }
+    const k = 1 - Math.exp(-dt * (excite ? 6 : 3.2));
     const px = cur.x, py = cur.y;
     for (const key of ['x', 'y', 'z', 's', 'pitch', 'roll', 'moving']) cur[key] = lerp(cur[key], goal[key] || 0, k);
     const vx = (cur.x - px) / Math.max(dt, 1e-4), vy = (cur.y - py) / Math.max(dt, 1e-4);
     // A shark never swims backwards: while travelling, the nose turns into the direction of travel.
-    const travel = vx > 0 ? 18 : 162, pull = clamp((Math.abs(vx) - .04) * 2.4, 0, .9);
-    heading = lerpAngle(heading, lerpAngle(goal.yaw, travel, pull), 1 - Math.exp(-dt * 2.6));
+    let travel = vx > 0 ? 18 : 162, pull = clamp((Math.abs(vx) - .04) * 2.4, 0, .9);
+    if (forceYaw !== null) { travel = forceYaw; pull = .92; }
+    heading = lerpAngle(heading, lerpAngle(goal.yaw, travel, pull), 1 - Math.exp(-dt * (excite ? 7 : 2.6)));
     mouse.sx = lerp(mouse.sx, mouse.x, 1 - Math.exp(-dt * 2)); mouse.sy = lerp(mouse.sy, mouse.y, 1 - Math.exp(-dt * 2));
 
     const halfH = Math.tan(deg(camera.fov / 2)) * camera.position.z, halfW = halfH * camera.aspect;
     const hover = (Math.sin(t * 1.4) * .045 + Math.sin(t * 2.3) * .015) * calm;
     flight.position.set(cur.x * halfW + Math.sin(t * .9) * .05 * calm + mouse.sx * .12, cur.y * halfH + hover * halfH * .5 + mouse.sy * .08, cur.z + Math.sin(t * .6) * .15);
-    flight.scale.setScalar(halfH * 2 * .3 * cur.s);
+    flight.scale.setScalar(halfH * 2 * .3 * cur.s * (1 + fl * .22));
     flight.rotation.set(0, -deg(heading + mouse.sx * 22), 0);
-    const pitch = cur.pitch + clamp(vy * 22, -26, 26) + Math.sin(t * 1.4 + 1) * 3 + mouse.sy * 9;
-    const roll = cur.roll - clamp(vx * 12, -18, 18) + Math.sin(t * 1.1) * 3 + (goal.spin || 0) * (config.spin === false ? 0 : 1);
+    const pitch = cur.pitch - fl * 22 + clamp(vy * 22, -26, 26) + Math.sin(t * 1.4 + 1) * 3 + mouse.sy * 9;
+    const roll = cur.roll - clamp(vx * 12, -18, 18) + Math.sin(t * 1.1) * 3 + (goal.spin || 0) * (config.spin === false ? 0 : 1) + spinExtra;
     fishRoot.rotation.set(deg(roll), 0, deg(pitch), 'YZX');
 
     // Tail beat speeds up and widens mid-swim.
-    const effort = clamp(cur.moving + Math.hypot(vx, vy) * .6, 0, 1.4);
+    const effort = clamp(cur.moving + Math.hypot(vx, vy) * .6 + fl * .5, 0, 1.4);
     swim.uFreq.value = Math.PI * 2 * (1.5 + effort * 1.6); swim.uAmp.value = (.035 + effort * .07) * calm;
     swim.uTime.value = t;
     for (const { hinge, side } of paddles) { const a = Math.sin(t * swim.uFreq.value * .55 + (side > 0 ? 0 : .6)); hinge.rotation.set(side * (.5 + a * .07), 0, 0); }
 
-    nextBubble -= dt;
+    nextBubble -= dt; if (fl > .12 || (excite && effort > .6)) nextBubble = Math.min(nextBubble, Math.random() * .06);
     if (nextBubble <= 0 && !reduced.matches) {
       nextBubble = (1.1 + Math.random() * 1.8) / (1 + effort * 5);
       const free = bubbles.find(b => !b.sprite.visible);

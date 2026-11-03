@@ -1,0 +1,15 @@
+/* Scene change: a shark's jaws slam shut over the whole screen, then open on the next scene. */
+html.chomp-in::before{content:'';position:fixed;inset:0;z-index:399;background:#240a12}
+.shark-jaws{position:fixed;inset:0;z-index:400;pointer-events:none;overflow:hidden;--tooth:min(19vh,160px)}
+.shark-jaws.shut{pointer-events:auto}
+.shark-jaws::before{content:'';position:absolute;left:0;right:0;top:calc(50vh - var(--tooth) / 2);height:var(--tooth);background:#240a12;opacity:0;transition:opacity .2s ease .35s}
+.shark-jaws.shut::before{opacity:1}
+.shark-jaws .jaw{position:absolute;left:0;right:0;height:calc(50vh - var(--tooth) / 2);transition:transform .95s cubic-bezier(.2,.7,.2,1)}
+.shark-jaws.shut .jaw{transition-duration:.5s;transition-timing-function:cubic-bezier(.6,0,.9,.4)}
+.shark-jaws .jaw.top{top:0;background:linear-gradient(180deg,#1b0610,#5a1428 55%,#8c2f45);transform:translateY(calc(-100% - var(--tooth) - 6px))}
+.shark-jaws .jaw.bottom{bottom:0;background:linear-gradient(0deg,#1b0610,#5a1428 55%,#8c2f45);transform:translateY(calc(100% + var(--tooth) + 6px))}
+.shark-jaws.shut .jaw{transform:none}
+.shark-jaws .jaw svg{position:absolute;left:0;width:100%;height:var(--tooth);display:block;filter:drop-shadow(0 0 6px #0008)}
+.shark-jaws .jaw.top svg{top:calc(100% - 1px)}
+.shark-jaws .jaw.bottom svg{bottom:calc(100% - 1px)}
+@media(prefers-reduced-motion:reduce){.shark-jaws .jaw{transition-duration:.01s!important}}
