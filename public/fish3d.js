@@ -196,7 +196,7 @@ function start() {
     const a = K[i - 1], b = K[i], arc = Math.sin(t * Math.PI);
     // Mid-flight the shark dives, banks into the turn, and may corkscrew once (spin is added after smoothing so it stays in step with the scroll).
     const bank = (b.x > a.x ? -1 : 1) * arc * 24;
-    return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) + arc * -.28, z: lerp(a.z || 0, b.z || 0, t) + arc * .8, s: lerp(a.s, b.s, t) * (1 + arc * .16), yaw: lerpAngle(a.yaw, b.yaw, t), pitch: lerp(a.pitch, b.pitch, t), roll: lerp(a.roll, b.roll, t) + bank, moving: arc, spin: (b.spin || 0) * t };
+    return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) + arc * -.28, z: lerp(a.z || 0, b.z || 0, t) + arc * .3, s: lerp(a.s, b.s, t) * (1 + arc * .16), yaw: lerpAngle(a.yaw, b.yaw, t), pitch: lerp(a.pitch, b.pitch, t), roll: lerp(a.roll, b.roll, t) + bank, moving: arc, spin: (b.spin || 0) * t };
   }
 
   const cur = { z: 0, ...targetAt() }; let heading = cur.yaw;
